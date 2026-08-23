@@ -6,76 +6,108 @@ from datetime import datetime, timedelta
 
 # הגדרת עיצוב הדף ופריסה רחבה
 st.set_page_config(
-    page_title="StockScreener Pro", 
-    page_icon="⚡", 
+    page_title="StockScreener Pro - SR", 
+    page_icon="📈", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# עיצוב CSS מותאם אישית (כיוון מימין לשמאל + שיפור נראות ועיצוב)
+# עיצוב CSS מותאם אישית (כיוון מימין לשמאל + רקע מדורג כתום ולוגו SR-שר)
 st.markdown("""
     <style>
     .stApp {
         direction: rtl;
         text-align: right;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #F8FAFC;
+        background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 50%, #FED7AA 100%);
+        background-attachment: fixed;
     }
     h1, h2, h3 {
         text-align: center;
-        color: #1E3A8A;
+        color: #9A3412;
     }
     p, label, .stMarkdown {
         text-align: right;
+        color: #431407;
     }
     .stButton>button {
         width: 100%;
         border-radius: 12px;
         font-weight: bold;
-        background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+        background: linear-gradient(135deg, #F97316 0%, #C2410C 100%);
         color: white;
         border: none;
         padding: 0.7rem 1rem;
-        box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 4px 6px rgba(249, 115, 22, 0.3);
     }
     .stButton>button:hover {
-        background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+        background: linear-gradient(135deg, #EA580C 0%, #9A3412 100%);
         color: white;
     }
+    .brand-logo-container {
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 15px;
+    }
+    .brand-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
+        color: white;
+        font-size: 2.2rem;
+        font-weight: 900;
+        width: 85px;
+        height: 85px;
+        border-radius: 22px;
+        box-shadow: 0 10px 20px rgba(194, 65, 12, 0.4);
+        letter-spacing: 2px;
+        border: 2px solid #FFEDD5;
+    }
+    .brand-subtitle {
+        font-size: 0.95rem;
+        color: #7C2D12;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-top: 8px;
+    }
     .login-card {
-        background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-        border: 1px solid #BFDBFE;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid #FDBA74;
         padding: 30px;
-        border-radius: 16px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        border-radius: 20px;
+        box-shadow: 0 15px 25px -5px rgba(234, 88, 12, 0.15);
         margin-bottom: 20px;
     }
     .market-badge {
         display: inline-block;
-        background-color: #DCFCE7;
-        color: #166534;
-        padding: 6px 14px;
+        background-color: #FFEDD5;
+        color: #9A3412;
+        padding: 6px 16px;
         border-radius: 20px;
         font-size: 0.85rem;
         font-weight: bold;
+        border: 1px solid #FDBA74;
         margin-bottom: 10px;
     }
     .contract-box {
-        background-color: #ffffff;
-        border: 1px solid #CBD5E1;
+        background-color: rgba(255, 255, 255, 0.95);
+        border: 1px solid #FDBA74;
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 12px;
         max-height: 200px;
         overflow-y: scroll;
         margin-bottom: 15px;
         font-size: 0.9rem;
-        color: #334155;
+        color: #431407;
     }
     .payment-alert {
         background-color: #FEF2F2;
         border: 1px solid #F87171;
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 12px;
         color: #991B1B;
         text-align: center;
         margin-top: 20px;
@@ -103,20 +135,26 @@ ADMIN_SECRET_CODE = "999999"
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2.2, 1])
     with col2:
-        # אזור לוגו וכותרת מרשימה
-        st.markdown("<div style='text-align: center; margin-top: 20px;'><span class='market-badge'>📈 פלטפורמת מסחר וניתוחים טכניים</span></div>", unsafe_allow_html=True)
-        st.markdown("<h1>⚡ StockScreener Pro</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748B; font-size: 1.05rem;'>מערכת חכמה לאיתור מניות מובילות, ניתוח RSI וייצור דוחות אקסל וגרפים מתקדמים בקליק אחד.</p>", unsafe_allow_html=True)
+        # לוגו SR / שר מעוצב
+        st.markdown("""
+            <div class='brand-logo-container'>
+                <div class='brand-logo'>SR</div>
+                <div class='brand-subtitle'>שר | Your Next Investment</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("<div style='text-align: center;'><span class='market-badge'>📈 פלטפורמת מסחר וניתוחים טכניים מתקדמים</span></div>", unsafe_allow_html=True)
+        st.markdown("<h1>StockScreener Pro</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #7C2D12; font-size: 1.05rem;'>מערכת חכמה לאיתור מניות מובילות, ניתוח RSI וייצור דוחות אקסל וגרפים ויזואליים בקליק אחד.</p>", unsafe_allow_html=True)
         
         # קופסת כניסה מעוצבת
         st.markdown("<div class='login-card'>", unsafe_allow_html=True)
         st.subheader("🔐 התחברות לחשבון שלך")
-        st.markdown("<p style='color: #475569; font-size: 0.9rem;'>הקליד תעודת זהות (<b>9 ספרות בדיוק</b>) וסיסמה (<b>6 הספרות האחרונות</b> של התעודת זהות)</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #7C2D12; font-size: 0.9rem;'>הקליד תעודת זהות (<b>9 ספרות בדיוק</b>) וסיסמה (<b>6 הספרות האחרונות</b> של התעודת זהות)</p>", unsafe_allow_html=True)
         
         user_id = st.text_input("מספר תעודת זהות (9 ספרות / קוד מנהל):").strip()
         user_password = st.text_input("סיסמה (6 ספרות אחרונות / סיסמת מנהל):", type="password").strip()
         
-        # בדיקה האם זו כניסת מנהל
         is_admin_attempt = (user_id == "ADMIN" and user_password == ADMIN_SECRET_CODE)
         
         if is_admin_attempt:
@@ -144,7 +182,6 @@ if not st.session_state.logged_in:
             if not agreed:
                 st.error("❌ עליך לאשר את תנאי השימוש וכתב הסרת האחריות לפני ההתחברות.")
             elif user_id != "ADMIN":
-                # בדיקה שתעודת הזהות היא באורך 9 ספרות בדיוק וכוללת ספרות בלבד
                 if not user_id.isdigit() or len(user_id) != 9:
                     st.error("❌ מספר תעודת הזהות חייב להכיל בדיוק 9 ספרות.")
                 elif user_password != user_id[-6:]:
@@ -152,22 +189,18 @@ if not st.session_state.logged_in:
                 else:
                     today = datetime.now().date()
                     
-                    # בדיקה האם המשתמש קיים במערכת
                     if user_id in st.session_state.users_db:
                         user_data = st.session_state.users_db[user_id]
                         join_date = datetime.strptime(user_data["join_date"], "%Y-%m-%d").date()
                         
-                        # בדיקה האם אנחנו עדיין בחודש ניסיון ראשון (30 יום מההרשמה הראשונית)
                         in_first_trial = (today - join_date).days <= 30
                         
-                        # בדיקה האם יש תשלום פעיל למחזור הנוכחי (פחות מ-30 יום מהתשלום האחרון)
                         is_cycle_paid = False
                         if user_data.get("last_payment_date"):
                             last_pay = datetime.strptime(user_data["last_payment_date"], "%Y-%m-%d").date()
                             if (today - last_pay).days <= 30:
                                 is_cycle_paid = True
                         
-                        # אישור כניסה אם הוא בניסיון ראשון או שילם עבור המחזור החודשי הנוכחי
                         if in_first_trial or is_cycle_paid:
                             st.session_state.logged_in = True
                             st.session_state.current_user = user_id
@@ -185,7 +218,6 @@ if not st.session_state.logged_in:
                             </div>
                             """, unsafe_allow_html=True)
                     else:
-                        # משתמש חדש לגמרי - פותחים לו חודש ניסיון חינם אוטומטית
                         st.session_state.users_db[user_id] = {
                             "join_date": today.strftime("%Y-%m-%d"),
                             "last_payment_date": None
@@ -209,7 +241,6 @@ elif st.session_state.is_admin:
         
     st.markdown("---")
     
-    # --- שדה לעדכון המחיר החודשי ---
     st.subheader("⚙️ הגדרת מחיר מנוי חודשי")
     new_price = st.number_input("עדכן מחיר מנוי חודשי (ש״ח כולל מע״מ):", min_value=0, value=st.session_state.monthly_price, step=5)
     if st.button("💾 שמור מחיר חדש"):
@@ -255,8 +286,8 @@ elif st.session_state.is_admin:
 
 # --- האפליקציה הראשית (מוצגת ללקוחות מורשים) ---
 else:
-    st.markdown("<h1>⚡ StockScreener Pro</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='color: #64748B; font-size: 1.1rem; font-weight: normal; text-align: center;'>מערכת מתקדמת לניתוח מניות, איתותי מומנטום, דוחות אקסל וגרפים ויזואליים</h3>", unsafe_allow_html=True)
+    st.markdown("<h1>📈 StockScreener Pro - SR</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #7C2D12; font-size: 1.1rem; font-weight: normal; text-align: center;'>מערכת מתקדמת לניתוח מניות, איתותי מומנטום, דוחות אקסל וגרפים ויזואליים</h3>", unsafe_allow_html=True)
     
     if st.sidebar.button("🚪 התנתק מהמערכת"):
         st.session_state.logged_in = False
