@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# עיצוב CSS מותאם אישית (כיוון מימין לשמאל + רקע מדורג כתום ולוגו SR-שר)
+# עיצוב CSS מותאם אישית (כולל מעוין שוכב, אותיות ענק מסולסלות עם קו כפול, וגרף)
 st.markdown("""
     <style>
     .stApp {
@@ -46,31 +46,68 @@ st.markdown("""
     }
     .brand-logo-container {
         text-align: center;
-        margin-top: 10px;
-        margin-bottom: 15px;
+        margin-top: 25px;
+        margin-bottom: 30px;
     }
-    .brand-logo {
+    /* עיצוב המעוין השוכב עם קו כפול וגרף ברקע */
+    .diamond-logo {
         display: inline-flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
-        color: white;
-        font-size: 2.2rem;
+        width: 160px;
+        height: 160px;
+        background: linear-gradient(135deg, #EA580C 0%, #9A3412 100%);
+        transform: rotate(45deg);
+        border-radius: 20px;
+        box-shadow: 0 15px 30px rgba(194, 65, 12, 0.4);
+        border: 4px double #FFEDD5;
+        margin: 25px auto;
+        position: relative;
+        /* הוספת אלמנט גרף עולה ברקע של המעוין */
+        background-image: linear-gradient(135deg, #EA580C 0%, #9A3412 100%), 
+                          repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.07) 10px, rgba(255,255,255,0.07) 20px);
+    }
+    /* יישור הטקסט בתוך המעוין שלא יצא מסובב */
+    .diamond-content {
+        transform: rotate(-45deg);
+        text-align: center;
+        color: #FFF7ED;
+        font-family: 'Georgia', Times, serif; /* פונט מסולסל קלאסי */
+    }
+    /* אותיות מסולסלות גדולות עם קו כפול (Double Stroke effect) */
+    .diamond-title-en {
+        font-size: 2.4rem;
         font-weight: 900;
-        width: 85px;
-        height: 85px;
-        border-radius: 22px;
-        box-shadow: 0 10px 20px rgba(194, 65, 12, 0.4);
-        letter-spacing: 2px;
-        border: 2px solid #FFEDD5;
+        letter-spacing: 3px;
+        line-height: 1.1;
+        color: #FFFFFF;
+        text-shadow: 
+             2px  2px 0px #7C2D12,
+            -2px -2px 0px #7C2D12,
+             2px -2px 0px #7C2D12,
+            -2px  2px 0px #7C2D12,
+             0px  4px 8px rgba(0,0,0,0.4);
+    }
+    .diamond-title-he {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-top: 2px;
+        color: #FFFFFF;
+        text-shadow: 
+             1.5px  1.5px 0px #7C2D12,
+            -1.5px -1.5px 0px #7C2D12,
+             1.5px -1.5px 0px #7C2D12,
+            -1.5px  1.5px 0px #7C2D12,
+             0px  3px 6px rgba(0,0,0,0.4);
     }
     .brand-subtitle {
-        font-size: 0.95rem;
+        font-size: 1.05rem;
         color: #7C2D12;
-        font-weight: 700;
+        font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-        margin-top: 8px;
+        letter-spacing: 2px;
+        margin-top: 15px;
     }
     .login-card {
         background: rgba(255, 255, 255, 0.9);
@@ -135,15 +172,20 @@ ADMIN_SECRET_CODE = "999999"
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2.2, 1])
     with col2:
-        # לוגו SR / שר מעוצב
+        # לוגו מעוין שוכב עם קו כפול, אותיות מסולסלות ענק SR ו-שר, וגרף ברקע
         st.markdown("""
             <div class='brand-logo-container'>
-                <div class='brand-logo'>SR</div>
-                <div class='brand-subtitle'>שר | Your Next Investment</div>
+                <div class='diamond-logo'>
+                    <div class='diamond-content'>
+                        <div class='diamond-title-en'>SR</div>
+                        <div class='diamond-title-he'>שר</div>
+                    </div>
+                </div>
+                <div class='brand-subtitle'>📈 Your Next Investment | ההשקעה הבאה שלך</div>
             </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("<div style='text-align: center;'><span class='market-badge'>📈 פלטפורמת מסחר וניתוחים טכניים מתקדמים</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center;'><span class='market-badge'>⚡ פלטפורמת מסחר וניתוחים טכניים מתקדמים</span></div>", unsafe_allow_html=True)
         st.markdown("<h1>StockScreener Pro</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #7C2D12; font-size: 1.05rem;'>מערכת חכמה לאיתור מניות מובילות, ניתוח RSI וייצור דוחות אקסל וגרפים ויזואליים בקליק אחד.</p>", unsafe_allow_html=True)
         
@@ -286,7 +328,7 @@ elif st.session_state.is_admin:
 
 # --- האפליקציה הראשית (מוצגת ללקוחות מורשים) ---
 else:
-    st.markdown("<h1>📈 StockScreener Pro - SR</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>📈 StockScreener Pro - SR (שר)</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='color: #7C2D12; font-size: 1.1rem; font-weight: normal; text-align: center;'>מערכת מתקדמת לניתוח מניות, איתותי מומנטום, דוחות אקסל וגרפים ויזואליים</h3>", unsafe_allow_html=True)
     
     if st.sidebar.button("🚪 התנתק מהמערכת"):
