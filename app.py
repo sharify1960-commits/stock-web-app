@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# עיצוב CSS מותאם אישית (כולל מעוין שוכב, אותיות ענק מסולסלות עם קו כפול, וגרף)
+# עיצוב CSS מותאם אישית עם גוונים כתומים מטאליים יוקרתיים
 st.markdown("""
     <style>
     .stApp {
@@ -24,7 +24,7 @@ st.markdown("""
     }
     h1, h2, h3 {
         text-align: center;
-        color: #9A3412;
+        color: #85330a;
     }
     p, label, .stMarkdown {
         text-align: right;
@@ -34,22 +34,24 @@ st.markdown("""
         width: 100%;
         border-radius: 12px;
         font-weight: bold;
-        background: linear-gradient(135deg, #F97316 0%, #C2410C 100%);
+        background: linear-gradient(135deg, #ff7e1d 0%, #d64d00 50%, #993300 100%);
         color: white;
-        border: none;
+        border: 1px solid #ffd1a4;
         padding: 0.7rem 1rem;
-        box-shadow: 0 4px 6px rgba(249, 115, 22, 0.3);
+        box-shadow: 0 4px 15px rgba(214, 77, 0, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.4);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
     .stButton>button:hover {
-        background: linear-gradient(135deg, #EA580C 0%, #9A3412 100%);
+        background: linear-gradient(135deg, #ff943b 0%, #e65c00 50%, #b33b00 100%);
         color: white;
+        border-color: #ffe4c4;
     }
     .brand-logo-container {
         text-align: center;
         margin-top: 25px;
         margin-bottom: 30px;
     }
-    /* עיצוב המעוין השוכב עם קו כפול וגרף ברקע */
+    /* עיצוב המעוין השוכב עם אפקט מטאלי עמוק */
     .diamond-logo {
         display: inline-flex;
         flex-direction: column;
@@ -57,15 +59,13 @@ st.markdown("""
         justify-content: center;
         width: 160px;
         height: 160px;
-        background: linear-gradient(135deg, #EA580C 0%, #9A3412 100%);
+        background: linear-gradient(135deg, #ff8c1a 0%, #d64d00 50%, #852e00 100%);
         transform: rotate(45deg);
         border-radius: 20px;
-        box-shadow: 0 15px 30px rgba(194, 65, 12, 0.4);
-        border: 4px double #FFEDD5;
+        box-shadow: 0 15px 35px rgba(184, 69, 0, 0.5), inset 0 3px 6px rgba(255, 220, 180, 0.6), inset 0 -4px 8px rgba(80, 20, 0, 0.7);
+        border: 4px double #ffdbb5;
         margin: 25px auto;
         position: relative;
-        background-image: linear-gradient(135deg, #EA580C 0%, #9A3412 100%), 
-                          repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.07) 10px, rgba(255,255,255,0.07) 20px);
     }
     /* יישור הטקסט בתוך המעוין שלא יצא מסובב */
     .diamond-content {
@@ -74,63 +74,69 @@ st.markdown("""
         color: #FFF7ED;
         font-family: 'Georgia', Times, serif;
     }
-    /* אותיות מסולסלות גדולות עם קו כפול (Double Stroke effect) */
+    /* אותיות מסולסלות גדולות עם אפקט מתכת יוקרתי */
     .diamond-title-en {
         font-size: 2.4rem;
         font-weight: 900;
         letter-spacing: 3px;
         line-height: 1.1;
-        color: #FFFFFF;
-        text-shadow: 
-             2px  2px 0px #7C2D12,
-            -2px -2px 0px #7C2D12,
-             2px -2px 0px #7C2D12,
-            -2px  2px 0px #7C2D12,
-             0px  4px 8px rgba(0,0,0,0.4);
+        background: linear-gradient(180deg, #ffffff 0%, #ffe0b3 50%, #ffaa66 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(2px 2px 2px rgba(80, 20, 0, 0.8));
     }
     .diamond-title-he {
         font-size: 1.8rem;
         font-weight: bold;
         margin-top: 2px;
-        color: #FFFFFF;
-        text-shadow: 
-             1.5px  1.5px 0px #7C2D12,
-            -1.5px -1.5px 0px #7C2D12,
-             1.5px -1.5px 0px #7C2D12,
-            -1.5px  1.5px 0px #7C2D12,
-             0px  3px 6px rgba(0,0,0,0.4);
+        background: linear-gradient(180deg, #ffffff 0%, #ffdfb8 50%, #ff9944 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(1.5px 1.5px 2px rgba(80, 20, 0, 0.8));
     }
     .brand-subtitle {
         font-size: 1.05rem;
-        color: #7C2D12;
+        background: linear-gradient(135deg, #993300 0%, #cc5200 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 2px;
         margin-top: 15px;
     }
+    /* פנל / כרטיסיית כניסה בכתום מטאלי יוקרתי */
     .login-card {
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-        border: 1px solid #FDBA74;
+        background: linear-gradient(145deg, #ffe5cc 0%, #ffd1a4 50%, #ffbe80 100%);
+        border: 2px solid #e67300;
         padding: 30px;
         border-radius: 20px;
-        box-shadow: 0 15px 25px -5px rgba(234, 88, 12, 0.15);
+        box-shadow: 0 15px 35px -5px rgba(204, 82, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.7), inset 0 -3px 6px rgba(180, 70, 0, 0.2);
         margin-bottom: 20px;
+    }
+    .login-card h3 {
+        color: #732600;
+        text-shadow: 0 1px 1px rgba(255,255,255,0.6);
+    }
+    .login-card p {
+        color: #591e00;
+        font-weight: 500;
     }
     .market-badge {
         display: inline-block;
-        background-color: #FFEDD5;
-        color: #9A3412;
+        background: linear-gradient(135deg, #ff9933 0%, #e65c00 100%);
+        color: #ffffff;
         padding: 6px 16px;
         border-radius: 20px;
         font-size: 0.85rem;
         font-weight: bold;
-        border: 1px solid #FDBA74;
+        border: 1px solid #ffd1a4;
+        box-shadow: 0 4px 8px rgba(214, 77, 0, 0.25);
         margin-bottom: 10px;
+        text-shadow: 0 1px 1px rgba(0,0,0,0.3);
     }
     .contract-box {
-        background-color: rgba(255, 255, 255, 0.95);
-        border: 1px solid #FDBA74;
+        background: linear-gradient(145deg, #fff3e6 0%, #ffe6cc 100%);
+        border: 1.5px solid #ff9933;
         padding: 20px;
         border-radius: 12px;
         max-height: 200px;
@@ -138,15 +144,28 @@ st.markdown("""
         margin-bottom: 15px;
         font-size: 0.9rem;
         color: #431407;
+        box-shadow: inset 0 2px 4px rgba(255,255,255,0.8);
     }
     .payment-alert {
-        background-color: #FEF2F2;
-        border: 1px solid #F87171;
+        background: linear-gradient(145deg, #ffe6e6 0%, #ffcccc 100%);
+        border: 1.5px solid #e60000;
         padding: 20px;
         border-radius: 12px;
-        color: #991B1B;
+        color: #800000;
         text-align: center;
         margin-top: 20px;
+        box-shadow: 0 6px 15px rgba(230, 0, 0, 0.15);
+    }
+    /* תיבות קלט מעוצבות בהתאמה */
+    .stTextInput>div>div>input {
+        background-color: #fffaf5;
+        border: 1.5px solid #e67300;
+        border-radius: 8px;
+        color: #431407;
+    }
+    .stTextInput>div>div>input:focus {
+        border-color: #993300;
+        box-shadow: 0 0 8px rgba(230, 115, 0, 0.4);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -171,11 +190,11 @@ if 'logged_in' not in st.session_state:
 # סיסמת מנהל סודית
 ADMIN_SECRET_CODE = "999999" 
 
-# --- מסך הזדהות וכניסת משתמשים / מנהל מעוצב ---
+# --- מסך הזדהות וכניסת משתמשים / מנהל מעוצב בכתום מטאלי ---
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2.2, 1])
     with col2:
-        # לוגו מעוין שוכב עם קו כפול, אותיות מסולסלות ענק SR ו-שר, וגרף ברקע
+        # לוגו מעוין שוכב מטאלי
         st.markdown("""
             <div class='brand-logo-container'>
                 <div class='diamond-logo'>
@@ -190,12 +209,12 @@ if not st.session_state.logged_in:
         
         st.markdown("<div style='text-align: center;'><span class='market-badge'>⚡ פלטפורמת מסחר וניתוחים טכניים מתקדמים</span></div>", unsafe_allow_html=True)
         st.markdown("<h1>StockScreener Pro</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #7C2D12; font-size: 1.05rem;'>מערכת חכמה לאיתור מניות מובילות, ניתוח RSI וייצור דוחות אקסל וגרפים ויזואליים בקליק אחד.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #7c2d12; font-size: 1.05rem;'>מערכת חכמה לאיתור מניות מובילות, ניתוח RSI וייצור דוחות אקסל וגרפים ויזואליים בקליק אחד.</p>", unsafe_allow_html=True)
         
-        # קופסת כניסה מעוצבת
+        # קופסת כניסה בכתום מטאלי
         st.markdown("<div class='login-card'>", unsafe_allow_html=True)
         st.subheader("🔐 התחברות לחשבון שלך")
-        st.markdown("<p style='color: #7C2D12; font-size: 0.9rem;'>הקליד תעודת זהות (<b>9 ספרות בדיוק</b>) וסיסמה (<b>6 הספרות האחרונות</b> של התעודת זהות)</p>", unsafe_allow_html=True)
+        st.markdown("<p>הקליד תעודת זהות (<b>9 ספרות בדיוק</b>) וסיסמה (<b>6 הספרות האחרונות</b> של התעודת זהות)</p>", unsafe_allow_html=True)
         
         user_id = st.text_input("מספר תעודת זהות (9 ספרות / קוד מנהל):").strip()
         user_password = st.text_input("סיסמה (6 ספרות אחרונות / סיסמת מנהל):", type="password").strip()
@@ -263,7 +282,7 @@ if not st.session_state.logged_in:
                             <div class="payment-alert">
                                 <h3>⏳ תקופת הניסיון או מחזור החודש הנוכחי הסתיימו!</h3>
                                 <p>כדי להמשיך להשתמש במערכת ללא הפרעה, עליך להסדיר את התשלום החודשי בסך <b>{st.session_state.monthly_price} ש"ח כולל מע"מ</b>.</p>
-                                <hr style="border-color: #FCA5A5;">
+                                <hr style="border-color: #ff9999;">
                                 <p style="text-align: right; margin: 0;">💳 <b>איך משלמים?</b><br>
                                 • העברה בנקאית / Bit / PayBox למספר הטלפון או החשבון של המערכת.<br>
                                 • לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ, והמנהל יפתח לך מיד את הגישה לחודש נוסף!</p>
@@ -320,7 +339,6 @@ elif st.session_state.is_admin:
         admin_data = []
         today_date = datetime.now().date()
         
-        # איסוף כל המשתמשים (גם אלו שהוזנו ישירות כפטורים)
         all_uids = set(st.session_state.users_db.keys()).union(st.session_state.exempt_users)
         
         for uid in all_uids:
@@ -374,7 +392,7 @@ elif st.session_state.is_admin:
 # --- האפליקציה הראשית (מוצגת ללקוחות מורשים) ---
 else:
     st.markdown("<h1>📈 StockScreener Pro - SR (שר)</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='color: #7C2D12; font-size: 1.1rem; font-weight: normal; text-align: center;'>מערכת מתקדמת לניתוח מניות, איתותי מומנטום, דוחות אקסל וגרפים ויזואליים</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #85330a; font-size: 1.1rem; font-weight: normal; text-align: center;'>מערכת מתקדמת לניתוח מניות, איתותי מומנטום, דוחות אקסל וגרפים ויזואליים</h3>", unsafe_allow_html=True)
     
     if st.sidebar.button("🚪 התנתק מהמערכת"):
         st.session_state.logged_in = False
