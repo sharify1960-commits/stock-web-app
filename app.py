@@ -53,21 +53,34 @@ st.markdown("""
         font-size: 0.9rem;
         color: #334155;
     }
+    .payment-alert {
+        background-color: #FEF2F2;
+        border: 1px solid #F87171;
+        padding: 20px;
+        border-radius: 10px;
+        color: #991B1B;
+        text-align: center;
+        margin-top: 20px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# ניהול בסיס נתונים פנימי לזכרון המערכת
+# ניהול בסיס נתונים פנימי לזיכרון המערכת
 if 'users_db' not in st.session_state:
     st.session_state.users_db = {
-        # דוגמה למבנה: "123456789": {"join_date": "2026-08-01", "paid": False}
+        # מבנה לכל משתמש: {"join_date": "...", "last_payment_date": "...", "paid_cycle": True/False}
     }
+
+# שדה נסתר / מנוהל לעדכון מחיר המנוי בקלות בכל רגע
+if 'monthly_price' not in st.session_state:
+    st.session_state.monthly_price = 75  # מחיר התחלתי 75 ש"ח כולל מע"מ
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.current_user = None
     st.session_state.is_admin = False
 
-# הגדרת סיסמת מנהל סודית משלך (תוכל לשנות אותה כאן מתי שתרצה)
+# סיסמת מנהל סודית
 ADMIN_SECRET_CODE = "999999" 
 
 # --- מסך הזדהות וכניסת משתמשים / מנהל ---
@@ -88,13 +101,13 @@ if not st.session_state.logged_in:
                 st.session_state.is_admin = True
                 st.rerun()
         
-        # חוזה התקשרות והסרת אחריות משפטית
+        # חוזה התקשרות והסרת אחריות משפטית (כולל המחיר המעודכן דינמית)
         st.markdown("### 📄 תנאי שימוש והסרת אחריות משפטית")
-        st.markdown("""
+        st.markdown(f"""
         <div class="contract-box">
             <b>1. היעדר ייעוץ השקעות:</b> המערכת מספקת נתונים טכניים, חישובים וכלים סטטיסטיים בלבד ואינה מהווה בשום אופן ייעוץ השקעות, שיווק השקעות או הצעה לקנייה/מכירה של ניירות ערך.<br><br>
             <b>2. אחריות המשתמש:</b> השימוש במידע שמופק במערכת נעשה על אחריותו הבלעדית והמלאה של המשתמש. מפתח המערכת ו/או מפעיליה לא יישאו באחריות כלשהי לכל הפסד, נזק פיננסי או תוצאה ישירה/עקיפה שנגרמו כתוצאה מהסתמכות על הנתונים.<br><br>
-            <b>3. תשלום ומנוי:</b> הלקוח זכאי לחודש ניסיון ראשון חינם. לאחר מכן, יש להסדיר את התשלום החודשי מול מנהל המערכת. אי-הסדרת תשלום תגרור חסימת גישה למערכת עד לחידושה.
+            <b>3. תשלום ומנוי חודשי:</b> הלקוח זכאי לחודש ניסיון ראשון חינם. לאחר מכן, דמי השימוש החודשיים במערכת הינם <b>{st.session_state.monthly_price} ש"ח כולל מע"מ</b> לחודש. התשלום מתחדש מדי חודש, ואי-הסדרת תשלום במועד תגרור חסימת גישה זמנית עד לחידושו.
         </div>
         """, unsafe_allow_html=True)
         
@@ -110,22 +123,40 @@ if not st.session_state.logged_in:
                 if user_id in st.session_state.users_db:
                     user_data = st.session_state.users_db[user_id]
                     join_date = datetime.strptime(user_data["join_date"], "%Y-%m-%d").date()
-                    days_passed = (today - join_date).days
                     
-                    # בדיקה האם בתקופת ניסיון (30 יום) או ששילם
-                    if days_passed <= 30 or user_data.get("paid", False):
+                    # בדיקה האם אנחנו עדיין בחודש ניסיון ראשון (30 יום מההרשמה הראשונית)
+                    in_first_trial = (today - join_date).days <= 30
+                    
+                    # בדיקה האם יש תשלום פעיל למחזור הנוכחי (פחות מ-30 יום מהתשלום האחרון)
+                    is_cycle_paid = False
+                    if user_data.get("last_payment_date"):
+                        last_pay = datetime.strptime(user_data["last_payment_date"], "%Y-%m-%d").date()
+                        if (today - last_pay).days <= 30:
+                            is_cycle_paid = True
+                    
+                    # אישור כניסה אם הוא בניסיון ראשון או שילם עבור המחזור החודשי הנוכחי
+                    if in_first_trial or is_cycle_paid:
                         st.session_state.logged_in = True
                         st.session_state.current_user = user_id
                         st.session_state.is_admin = False
                         st.rerun()
                     else:
-                        st.warning("⏳ תקופת הניסיון החינמית שלך (30 יום) הסתיימה.")
-                        st.info("💳 **להסדרת תשלום:** אנא העבר את דמי המנוי ב-Bit / העברה בנקאית ושלח אסמכתא לוואטסאפ או למייל של המערכת כדי שנפתח לך את החשבון מיד.")
+                        # הודעה מדויקת המציגה את הסכום המעודכן לתשלום חודשי!
+                        st.markdown(f"""
+                        <div class="payment-alert">
+                            <h3>⏳ תקופת הניסיון או מחזור החודש הנוכחי הסתיימו!</h3>
+                            <p>כדי להמשיך להשתמש במערכת ללא הפרעה, עליך להסדיר את התשלום החודשי בסך <b>{st.session_state.monthly_price} ש"ח כולל מע"מ</b>.</p>
+                            <hr style="border-color: #FCA5A5;">
+                            <p style="text-align: right; margin: 0;">💳 <b>איך משלמים?</b><br>
+                            • העברה בנקאית / Bit / PayBox למספר הטלפון או החשבון של המערכת.<br>
+                            • לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ, והמנהל יפתח לך מיד את הגישה לחודש נוסף!</p>
+                        </div>
+                        """, unsafe_allow_html=True)
                 else:
                     # משתמש חדש לגמרי - פותחים לו חודש ניסיון חינם אוטומטית
                     st.session_state.users_db[user_id] = {
                         "join_date": today.strftime("%Y-%m-%d"),
-                        "paid": False
+                        "last_payment_date": None
                     }
                     st.session_state.logged_in = True
                     st.session_state.current_user = user_id
@@ -137,8 +168,8 @@ if not st.session_state.logged_in:
 
 # --- אזור ניהול (מנהל בלבד) ---
 elif st.session_state.is_admin:
-    st.markdown("<h1>🛠️ פאנל ניהול מנויים ומאשר תשלומים</h1>", unsafe_allow_html=True)
-    st.write("כאן תוכל לצפות בכל הלקוחות שנרשמו למערכת ולאשר להם תשלום ידנית בלחיצת כפתור.")
+    st.markdown("<h1>🛠️ פאנל ניהול מנויים ועדכון מחירים</h1>", unsafe_allow_html=True)
+    st.write("כאן תוכל לעדכן את מחיר המנוי, לצפות בכל הלקוחות, ולאשר להם חידוש חודשי לאחר ששילמו.")
     
     if st.button("🚪 התנתק מפאנל מנהל"):
         st.session_state.logged_in = False
@@ -148,24 +179,50 @@ elif st.session_state.is_admin:
         
     st.markdown("---")
     
+    # --- שדה נסתר/גלוי לעדכון המחיר החודשי ---
+    st.subheader("⚙️ הגדרת מחיר מנוי חודשי")
+    new_price = st.number_input("עדכן מחיר מנוי חודשי (ש״ח כולל מע״מ):", min_value=0, value=st.session_state.monthly_price, step=5)
+    if st.button("💾 שמור מחיר חדש"):
+        st.session_state.monthly_price = new_price
+        st.success(f"✅ המחיר החודשי עודכן בהצלחה ל-{new_price} ש״ח! מעתה הוא יופיע אוטומטית בחוזה ובהודעות התשלום.")
+
+    st.markdown("---")
+    
     if len(st.session_state.users_db) == 0:
         st.info("ℹ️ עדיין אין משתמשים רשומים במערכת.")
     else:
-        # הצגת טבלת משתמשים
+        # הצגת טבלת משתמשים וסטטוס מחזור תשלום
         admin_data = []
+        today_date = datetime.now().date()
         for uid, uinfo in st.session_state.users_db.items():
             join_d = uinfo["join_date"]
-            is_p = "כן 🟢" if uinfo["paid"] else "לא 🔴"
-            admin_data.append({"תעודת זהות": uid, "תאריך הרשמה": join_d, "האם שילם?": is_p})
+            last_p = uinfo.get("last_payment_date")
+            
+            # בדיקת סטטוס האם פעיל כרגע
+            join_dt = datetime.strptime(join_d, "%Y-%m-%d").date()
+            is_active = (today_date - join_dt).days <= 30
+            if last_p:
+                last_dt = datetime.strptime(last_p, "%Y-%m-%d").date()
+                if (today_date - last_dt).days <= 30:
+                    is_active = True
+            
+            status_str = "פעיל 🟢 (בניסיון או שילם)" if is_active else "דרוש תשלום חודשי 🔴 (פג תוקף)"
+            admin_data.append({
+                "תעודת זהות": uid, 
+                "תאריך הרשמה": join_d, 
+                "תשלום אחרון": last_p if last_p else "טרם שילם (תקופת ניסיון)",
+                "סטטוס נוכחי": status_str
+            })
         
         st.table(pd.DataFrame(admin_data))
         
-        st.markdown("### ✍️ אישור תשלום ללקוח לפי תעודת זהות")
-        target_uid = st.text_input("הכנס תעודת זהות של הלקוח ששילם:")
-        if st.button("✅ אשר תשלום ופתח מנוי קבוע"):
+        st.markdown("### ✍️ אישור תשלום חודשי חדש ללקוח (חידוש מחזור)")
+        target_uid = st.text_input("הכנס תעודת זהות של הלקוח ששילם עבור החודש הנוכחי:")
+        if st.button("✅ אישור תשלום ופתיחת גישה לחודש נוסף"):
             if target_uid in st.session_state.users_db:
-                st.session_state.users_db[target_uid]["paid"] = True
-                st.success(st.format("המנוי עבור ת.ז {target_uid} עודכן בהצלחה כ'שילם'! הגישה נפתחה."))
+                # מעדכן את תאריך התשלום האחרון להיום, מה שמאפס את המחזור לעוד 30 יום!
+                st.session_state.users_db[target_uid]["last_payment_date"] = datetime.now().date().strftime("%Y-%m-%d")
+                st.success(f"המנוי עבור ת.ז {target_uid} עודכן! הגישה נפתחה לחודש נוסף מעכשיו.")
             else:
                 st.error("❌ תעודת זהות זו לא נמצאה במערכת.")
 
