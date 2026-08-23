@@ -51,7 +51,6 @@ st.markdown("""
         margin-top: 25px;
         margin-bottom: 30px;
     }
-    /* עיצוב המעוין השוכב עם אפקט מטאלי עמוק */
     .diamond-logo {
         display: inline-flex;
         flex-direction: column;
@@ -178,13 +177,15 @@ if 'exempt_users' not in st.session_state:
 if 'monthly_price' not in st.session_state:
     st.session_state.monthly_price = 75
 
-# נוסח הודעת התשלום הניתן לעריכה מהניהול (כולל מספר טלפון עדכני)
+# נוסח הודעת התשלום הניתן לעריכה מהניהול (מוגדר מחדש כך שיכלול בהכרח את הטלפון)
+DEFAULT_PAYMENT_MSG = (
+    "💳 איך משלמים?\n"
+    "• העברה בנקאית / Bit / PayBox למספר הטלפון 0507634366.\n"
+    "• לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ למספר 0507634366 יחד עם: שם מלא + תעודת זהות (או מספר עוסק מורשה/חברה) לצורך הפקת הקבלה והחשבונית, והמנהל יפתח לך מיד את הגישה לחודש נוסף!"
+)
+
 if 'payment_message_template' not in st.session_state:
-    st.session_state.payment_message_template = (
-        "💳 **איך משלמים?**<br>"
-        "• העברה בנקאית / Bit / PayBox למספר הטלפון **0507634366**.<br>"
-        "• לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ למספר **0507634366** יחד עם: **שם מלא + תעודת זהות (או מספר עוסק מורשה/חברה)** לצורך הפקת הקבלה והחשבונית, והמנהל יפתח לך מיד את הגישה לחודש נוסף!"
-    )
+    st.session_state.payment_message_template = DEFAULT_PAYMENT_MSG
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -282,7 +283,7 @@ if not st.session_state.logged_in:
                                 <h3>⏳ תקופת הניסיון או מחזור החודש הנוכחי הסתיימו!</h3>
                                 <p>כדי להמשיך להשתמש במערכת ללא הפרעה, עליך להסדיר את התשלום החודשי בסך <b>{st.session_state.monthly_price} ש"ח כולל מע"מ</b>.</p>
                                 <hr style="border-color: #ff9999;">
-                                <p style="text-align: right; margin: 0;">{st.session_state.payment_message_template}</p>
+                                <p style="text-align: right; margin: 0; white-space: pre-line;">{st.session_state.payment_message_template}</p>
                             </div>
                             """, unsafe_allow_html=True)
                     else:
@@ -329,7 +330,7 @@ elif st.session_state.is_admin:
 
     st.markdown("---")
     st.subheader("✏️ עריכת נוסח הודעת תשלום למשתמש שפג תוקפו")
-    edited_msg = st.text_area("ערוך כאן את נוסח הודעת התשלום והקבלה שתוצג למשתמשים:", value=st.session_state.payment_message_template, height=120)
+    edited_msg = st.text_area("ערוך כאן את נוסח הודעת התשלום והקבלה שתוצג למשתמשים:", value=st.session_state.payment_message_template, height=140)
     if st.button("💾 שמור נוסח הודעה חדש"):
         st.session_state.payment_message_template = edited_msg
         st.success("✅ נוסח הודעת התשלום עודכן בהצלחה!")
