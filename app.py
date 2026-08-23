@@ -68,7 +68,7 @@ st.markdown("""
 # ניהול בסיס נתונים פנימי לזיכרון המערכת
 if 'users_db' not in st.session_state:
     st.session_state.users_db = {
-        # מבנה לכל משתמש: {"join_date": "...", "last_payment_date": "...", "paid_cycle": True/False}
+        # מבנה לכל משתמש: {"join_date": "...", "last_payment_date": "..."}
     }
 
 # שדה נסתר / מנוהל לעדכון מחיר המנוי בקלות בכל רגע
@@ -88,10 +88,10 @@ if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("<h1>🔐 כניסת לקוחות למערכת</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748B;'>הזן תעודת זהות ו-6 ספרות אחרונות כסיסמה</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #64748B;'>הזן מספר תעודת זהות (9 ספרות בדיוק) ו-6 ספרות אחרונות כסיסמה</p>", unsafe_allow_html=True)
         
-        user_id = st.text_input("מספר תעודת זהות (או קוד מנהל):")
-        user_password = st.text_input("סיסמה (6 ספרות אחרונות / סיסמת מנהל):", type="password")
+        user_id = st.text_input("מספר תעודת זהות (9 ספרות / או קוד מנהל):").strip()
+        user_password = st.text_input("סיסמה (6 ספרות אחרונות / סיסמת מנהל):", type="password").strip()
         
         # בדיקה האם זו כניסת מנהל
         if user_id == "ADMIN" and user_password == ADMIN_SECRET_CODE:
@@ -116,55 +116,59 @@ if not st.session_state.logged_in:
         if st.button("התחבר למערכת"):
             if not agreed:
                 st.error("❌ עליך לאשר את תנאי השימוש וכתב הסרת האחריות לפני ההתחברות.")
-            elif len(user_id) >= 6 and user_password == user_id[-6:]:
-                today = datetime.now().date()
-                
-                # בדיקה האם המשתמש קיים במערכת
-                if user_id in st.session_state.users_db:
-                    user_data = st.session_state.users_db[user_id]
-                    join_date = datetime.strptime(user_data["join_date"], "%Y-%m-%d").date()
+            elif user_id != "ADMIN":
+                # בדיקה שתעודת הזהות היא באורך 9 ספרות בדיוק וכוללת ספרות בלבד
+                if not user_id.isdigit() or len(user_id) != 9:
+                    st.error("❌ מספר תעודת הזהות חייב להכיל בדיוק 9 ספרות.")
+                elif user_password != user_id[-6:]:
+                    st.error("❌ הסיסמה שגויה. עליך להזין בדיוק את 6 הספרות האחרונות של מספר תעודת הזהות.")
+                else:
+                    today = datetime.now().date()
                     
-                    # בדיקה האם אנחנו עדיין בחודש ניסיון ראשון (30 יום מההרשמה הראשונית)
-                    in_first_trial = (today - join_date).days <= 30
-                    
-                    # בדיקה האם יש תשלום פעיל למחזור הנוכחי (פחות מ-30 יום מהתשלום האחרון)
-                    is_cycle_paid = False
-                    if user_data.get("last_payment_date"):
-                        last_pay = datetime.strptime(user_data["last_payment_date"], "%Y-%m-%d").date()
-                        if (today - last_pay).days <= 30:
-                            is_cycle_paid = True
-                    
-                    # אישור כניסה אם הוא בניסיון ראשון או שילם עבור המחזור החודשי הנוכחי
-                    if in_first_trial or is_cycle_paid:
+                    # בדיקה האם המשתמש קיים במערכת
+                    if user_id in st.session_state.users_db:
+                        user_data = st.session_state.users_db[user_id]
+                        join_date = datetime.strptime(user_data["join_date"], "%Y-%m-%d").date()
+                        
+                        # בדיקה האם אנחנו עדיין בחודש ניסיון ראשון (30 יום מההרשמה הראשונית)
+                        in_first_trial = (today - join_date).days <= 30
+                        
+                        # בדיקה האם יש תשלום פעיל למחזור הנוכחי (פחות מ-30 יום מהתשלום האחרון)
+                        is_cycle_paid = False
+                        if user_data.get("last_payment_date"):
+                            last_pay = datetime.strptime(user_data["last_payment_date"], "%Y-%m-%d").date()
+                            if (today - last_pay).days <= 30:
+                                is_cycle_paid = True
+                        
+                        # אישור כניסה אם הוא בניסיון ראשון או שילם עבור המחזור החודשי הנוכחי
+                        if in_first_trial or is_cycle_paid:
+                            st.session_state.logged_in = True
+                            st.session_state.current_user = user_id
+                            st.session_state.is_admin = False
+                            st.rerun()
+                        else:
+                            # הודעה מדויקת המציגה את הסכום המעודכן לתשלום חודשי!
+                            st.markdown(f"""
+                            <div class="payment-alert">
+                                <h3>⏳ תקופת הניסיון או מחזור החודש הנוכחי הסתיימו!</h3>
+                                <p>כדי להמשיך להשתמש במערכת ללא הפרעה, עליך להסדיר את התשלום החודשי בסך <b>{st.session_state.monthly_price} ש"ח כולל מע"מ</b>.</p>
+                                <hr style="border-color: #FCA5A5;">
+                                <p style="text-align: right; margin: 0;">💳 <b>איך משלמים?</b><br>
+                                • העברה בנקאית / Bit / PayBox למספר הטלפון או החשבון של המערכת.<br>
+                                • לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ, והמנהל יפתח לך מיד את הגישה לחודש נוסף!</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        # משתמש חדש לגמרי - פותחים לו חודש ניסיון חינם אוטומטית
+                        st.session_state.users_db[user_id] = {
+                            "join_date": today.strftime("%Y-%m-%d"),
+                            "last_payment_date": None
+                        }
                         st.session_state.logged_in = True
                         st.session_state.current_user = user_id
                         st.session_state.is_admin = False
+                        st.success("🎉 נרשמת בהצלחה! הוענק לך חודש ניסיון חינם למערכת.")
                         st.rerun()
-                    else:
-                        # הודעה מדויקת המציגה את הסכום המעודכן לתשלום חודשי!
-                        st.markdown(f"""
-                        <div class="payment-alert">
-                            <h3>⏳ תקופת הניסיון או מחזור החודש הנוכחי הסתיימו!</h3>
-                            <p>כדי להמשיך להשתמש במערכת ללא הפרעה, עליך להסדיר את התשלום החודשי בסך <b>{st.session_state.monthly_price} ש"ח כולל מע"מ</b>.</p>
-                            <hr style="border-color: #FCA5A5;">
-                            <p style="text-align: right; margin: 0;">💳 <b>איך משלמים?</b><br>
-                            • העברה בנקאית / Bit / PayBox למספר הטלפון או החשבון של המערכת.<br>
-                            • לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ, והמנהל יפתח לך מיד את הגישה לחודש נוסף!</p>
-                        </div>
-                        """, unsafe_allow_html=True)
-                else:
-                    # משתמש חדש לגמרי - פותחים לו חודש ניסיון חינם אוטומטית
-                    st.session_state.users_db[user_id] = {
-                        "join_date": today.strftime("%Y-%m-%d"),
-                        "last_payment_date": None
-                    }
-                    st.session_state.logged_in = True
-                    st.session_state.current_user = user_id
-                    st.session_state.is_admin = False
-                    st.success("🎉 נרשמת בהצלחה! הוענק לך חודש ניסיון חינם למערכת.")
-                    st.rerun()
-            else:
-                st.error("❌ מספר תעודת זהות או סיסמה שגויים (יש לוודא שהוזנו 6 הספרות האחרונות הנכונות).")
 
 # --- אזור ניהול (מנהל בלבד) ---
 elif st.session_state.is_admin:
@@ -217,7 +221,7 @@ elif st.session_state.is_admin:
         st.table(pd.DataFrame(admin_data))
         
         st.markdown("### ✍️ אישור תשלום חודשי חדש ללקוח (חידוש מחזור)")
-        target_uid = st.text_input("הכנס תעודת זהות של הלקוח ששילם עבור החודש הנוכחי:")
+        target_uid = st.text_input("הכנס תעודת זהות של הלקוח ששילם עבור החודש הנוכחי (9 ספרות):").strip()
         if st.button("✅ אישור תשלום ופתיחת גישה לחודש נוסף"):
             if target_uid in st.session_state.users_db:
                 # מעדכן את תאריך התשלום האחרון להיום, מה שמאפס את המחזור לעוד 30 יום!
