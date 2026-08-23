@@ -373,9 +373,9 @@ elif st.session_state.is_admin:
                 last_p = "לא נדרש (פטור)"
                 join_d = "מוגדר כפטור"
             else:
-                uinfo = st.session_state.users_db[uid]
-                join_d = uinfo["join_date"]
-                last_p = uinfo.get("last_payment_date")
+                user_info = st.session_state.users_db[uid]
+                join_d = user_info["join_date"]
+                last_p = user_info.get("last_payment_date")
                 
                 join_dt = datetime.strptime(join_d, "%Y-%m-%d").date()
                 is_active = (today_date - join_dt).days <= 30
@@ -428,6 +428,21 @@ else:
     st.markdown("---")
 
     st.sidebar.header("⚙️ הגדרות ניתוח וסיכון")
+    
+    # הוספת מקטע הסבר נפתח למשתמשים שאינם בקיאים
+    with st.sidebar.expander("📖 מדריך מהיר לפרמטרים ולרמות RSI"):
+        st.markdown("""
+        **מה זה RSI ומדוע הוא חשוב?**
+        מדד RSI (Relative Strength Index) בודק את עוצמת המסחר במניה בסקלה של 0 עד 100 כדי לזהות מתי מניה נסחרת ב"יתר-קנייה" או "יתר-מכירה".
+        
+        * **רף RSI לקנייה (ברירת מחדל: 45):** 
+          מגדיר את הגבול התחתון. ככל שהמספר נמוך יותר (למשל סביב 30-40), פירוש הדבר שהמניה ירדה משמעותית ויכולה להוות הזדמנות קנייה פוטנציאלית (מכירת-יתר).
+        * **רף RSI למכירה (ברירת מחדל: 60):** 
+          מגדיר את הגבול העליון. ככל שהמספר גבוה יותר (למשל סביב 60-70 ומעלה), המניה עלתה חזק וייתכן שהיא יקרה מדי, מה שמאותת על אפשרות למימוש רווחים (קניית-יתר).
+        * **סימולי מניות:** 
+          הזן רשימת סימולים באנגלית מופרדים בפסיקים (לדוגמה: `AAPL, MSFT, TSLA`) כדי שהמערכת תסרוק את כולם יחד בלחיצת כפתור אחת.
+        """)
+
     tickers_input = st.sidebar.text_input(
         "הזן סימולי מניות (מופרדים בפסיקים)", 
         value="AAPL, MSFT, GOOGL, AMZN, NVDA, META"
