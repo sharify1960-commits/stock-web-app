@@ -67,14 +67,12 @@ st.markdown("""
         margin: 25px auto;
         position: relative;
     }
-    /* יישור הטקסט בתוך המעוין שלא יצא מסובב */
     .diamond-content {
         transform: rotate(-45deg);
         text-align: center;
         color: #FFF7ED;
         font-family: 'Georgia', Times, serif;
     }
-    /* אותיות מסולסלות גדולות עם אפקט מתכת יוקרתי */
     .diamond-title-en {
         font-size: 2.4rem;
         font-weight: 900;
@@ -104,7 +102,6 @@ st.markdown("""
         letter-spacing: 2px;
         margin-top: 15px;
     }
-    /* פנל / כרטיסיית כניסה בכתום מטאלי יוקרתי */
     .login-card {
         background: linear-gradient(145deg, #ffe5cc 0%, #ffd1a4 50%, #ffbe80 100%);
         border: 2px solid #e67300;
@@ -156,7 +153,6 @@ st.markdown("""
         margin-top: 20px;
         box-shadow: 0 6px 15px rgba(230, 0, 0, 0.15);
     }
-    /* תיבות קלט מעוצבות בהתאמה */
     .stTextInput>div>div>input {
         background-color: #fffaf5;
         border: 1.5px solid #e67300;
@@ -180,21 +176,27 @@ if 'exempt_users' not in st.session_state:
 
 # מחיר מנוי חודשי דינמי
 if 'monthly_price' not in st.session_state:
-    st.session_state.monthly_price = 75  # מחיר התחלתי 75 ש"ח כולל מע"מ
+    st.session_state.monthly_price = 75
+
+# נוסח הודעת התשלום הניתן לעריכה מהניהול
+if 'payment_message_template' not in st.session_state:
+    st.session_state.payment_message_template = (
+        "💳 **איך משלמים?**<br>"
+        "• העברה בנקאית / Bit / PayBox למספר הטלפון או החשבון של המערכת.<br>"
+        "• לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ יחד עם: **שם מלא + תעודת זהות (או מספר עוסק מורשה/חברה)** עבור הפקת הקבלה והחשבונית, והמנהל יפתח לך מיד את הגישה לחודש נוסף!"
+    )
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.current_user = None
     st.session_state.is_admin = False
 
-# סיסמת מנהל סודית
 ADMIN_SECRET_CODE = "999999" 
 
 # --- מסך הזדהות וכניסת משתמשים / מנהל מעוצב בכתום מטאלי ---
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2.2, 1])
     with col2:
-        # לוגו מעוין שוכב מטאלי
         st.markdown("""
             <div class='brand-logo-container'>
                 <div class='diamond-logo'>
@@ -211,7 +213,6 @@ if not st.session_state.logged_in:
         st.markdown("<h1>StockScreener Pro</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #7c2d12; font-size: 1.05rem;'>מערכת חכמה לאיתור מניות מובילות, ניתוח RSI וייצור דוחות אקסל וגרפים ויזואליים בקליק אחד.</p>", unsafe_allow_html=True)
         
-        # קופסת כניסה בכתום מטאלי
         st.markdown("<div class='login-card'>", unsafe_allow_html=True)
         st.subheader("🔐 התחברות לחשבון שלך")
         st.markdown("<p>הקליד תעודת זהות (<b>9 ספרות בדיוק</b>) וסיסמה (<b>6 הספרות האחרונות</b> של התעודת זהות)</p>", unsafe_allow_html=True)
@@ -230,7 +231,6 @@ if not st.session_state.logged_in:
         
         st.markdown("</div>", unsafe_allow_html=True)
         
-        # חוזה התקשרות והסרת אחריות משפטית
         st.markdown("### 📄 תנאי שימוש והסרת אחריות משפטית")
         st.markdown(f"""
         <div class="contract-box">
@@ -253,7 +253,6 @@ if not st.session_state.logged_in:
                 else:
                     today = datetime.now().date()
                     
-                    # בדיקה אם המשתמש פטור מתשלום (משפחה)
                     if user_id in st.session_state.exempt_users:
                         st.session_state.logged_in = True
                         st.session_state.current_user = user_id
@@ -283,9 +282,7 @@ if not st.session_state.logged_in:
                                 <h3>⏳ תקופת הניסיון או מחזור החודש הנוכחי הסתיימו!</h3>
                                 <p>כדי להמשיך להשתמש במערכת ללא הפרעה, עליך להסדיר את התשלום החודשי בסך <b>{st.session_state.monthly_price} ש"ח כולל מע"מ</b>.</p>
                                 <hr style="border-color: #ff9999;">
-                                <p style="text-align: right; margin: 0;">💳 <b>איך משלמים?</b><br>
-                                • העברה בנקאית / Bit / PayBox למספר הטלפון או החשבון של המערכת.<br>
-                                • לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ, והמנהל יפתח לך מיד את הגישה לחודש נוסף!</p>
+                                <p style="text-align: right; margin: 0;">{st.session_state.payment_message_template}</p>
                             </div>
                             """, unsafe_allow_html=True)
                     else:
@@ -302,7 +299,7 @@ if not st.session_state.logged_in:
 # --- אזור ניהול (מנהל בלבד) ---
 elif st.session_state.is_admin:
     st.markdown("<h1>🛠️ פאנל ניהול מנויים ופטורים (משפחה)</h1>", unsafe_allow_html=True)
-    st.write("כאן תוכל לעדכן את מחיר המנוי, לנהל משתמשים, ולהגדיר בני משפחה או חברים שיהיו פטורים מתשלום לצמיתות.")
+    st.write("כאן תוכל לעדכן את מחיר המנוי, לערוך את הודעות התשלום, לנהל משתמשים, ולהגדיר בני משפחה או חברים שיהיו פטורים מתשלום לצמיתות.")
     
     if st.button("🚪 התנתק מפאנל מנהל"):
         st.session_state.logged_in = False
@@ -329,6 +326,13 @@ elif st.session_state.is_admin:
                 st.success(f"✅ ת.ז {exempt_input} הוגדרה כפטורה מתשלום לצמיתות!")
             else:
                 st.error("❌ נא להזין מספר תעודת זהות תקין בן 9 ספרות.")
+
+    st.markdown("---")
+    st.subheader("✏️ עריכת נוסח הודעת תשלום למשתמש שפג תוקפו")
+    edited_msg = st.text_area("ערוך כאן את נוסח הודעת התשלום והקבלה שתוצג למשתמשים:", value=st.session_state.payment_message_template, height=120)
+    if st.button("💾 שמור נוסח הודעה חדש"):
+        st.session_state.payment_message_template = edited_msg
+        st.success("✅ נוסח הודעת התשלום עודכן בהצלחה!")
 
     st.markdown("---")
     st.subheader("📋 רשימת משתמשים רשומים במערכת")
