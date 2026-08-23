@@ -177,10 +177,11 @@ if 'exempt_users' not in st.session_state:
 if 'monthly_price' not in st.session_state:
     st.session_state.monthly_price = 75
 
-# נוסח הודעת התשלום הניתן לעריכה מהניהול (מוגדר מחדש כך שיכלול בהכרח את הטלפון)
+# נוסח הודעת התשלום הכולל את פרטי בנק יהב ומספר הטלפון
 DEFAULT_PAYMENT_MSG = (
     "💳 איך משלמים?\n"
-    "• העברה בנקאית / Bit / PayBox למספר הטלפון 0507634366.\n"
+    "• העברה בנקאית: בנק יהב (04), סניף 120, מספר חשבון 292521.\n"
+    "• Bit / PayBox למספר הטלפון 0507634366.\n"
     "• לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ למספר 0507634366 יחד עם: שם מלא + תעודת זהות (או מספר עוסק מורשה/חברה) לצורך הפקת הקבלה והחשבונית, והמנהל יפתח לך מיד את הגישה לחודש נוסף!"
 )
 
@@ -330,7 +331,7 @@ elif st.session_state.is_admin:
 
     st.markdown("---")
     st.subheader("✏️ עריכת נוסח הודעת תשלום למשתמש שפג תוקפו")
-    edited_msg = st.text_area("ערוך כאן את נוסח הודעת התשלום והקבלה שתוצג למשתמשים:", value=st.session_state.payment_message_template, height=140)
+    edited_msg = st.text_area("ערוך כאן את נוסח הודעת התשלום והקבלה שתוצג למשתמשים (כולל פרטי בנק וטלפון):", value=st.session_state.payment_message_template, height=160)
     if st.button("💾 שמור נוסח הודעה חדש"):
         st.session_state.payment_message_template = edited_msg
         st.success("✅ נוסח הודעת התשלום עודכן בהצלחה!")
