@@ -216,11 +216,14 @@ if not st.session_state.logged_in:
         st.markdown("<p style='text-align: center; color: #7c2d12; font-size: 1.05rem;'>מערכת חכמה לאיתור מניות מובילות, ניתוח RSI וייצור דוחות אקסל וגרפים ויזואליים בקליק אחד.</p>", unsafe_allow_html=True)
         
         st.markdown("<div class='login-card'>", unsafe_allow_html=True)
-        st.subheader("🔐 התחברות לחשבון שלך")
+        st.subheader("🔐 התחברות או הרשמה למערכת")
         st.markdown("<p>הקליד תעודת זהות (<b>9 ספרות בדיוק</b>) וסיסמה (<b>6 הספרות האחרונות</b> של התעודת זהות)</p>", unsafe_allow_html=True)
         
         user_id = st.text_input("מספר תעודת זהות (9 ספרות / קוד מנהל):").strip()
         user_password = st.text_input("סיסמה (6 ספרות אחרונות / סיסמת מנהל):", type="password").strip()
+        
+        # שדה להזנת מייל עבור משתמשים חדשים שרוצים עדכונים יומיים אוטומטיים
+        user_email = st.text_input("כתובת אימייל לקבלת דו״ח מניות יומי אוטומטי (אופציונלי):").strip()
         
         is_admin_attempt = (user_id == "ADMIN" and user_password == ADMIN_SECRET_CODE)
         
@@ -244,7 +247,7 @@ if not st.session_state.logged_in:
         
         agreed = st.checkbox("אני מאשר/ת שקראתי את תנאי השימוש, הסרת האחריות ומדיניות התשלום ואני מסכים/ה להם.")
         
-        if st.button("התחבר למערכת 🚀"):
+        if st.button("התחבר / הירשם למערכת 🚀"):
             if not agreed:
                 st.error("❌ עליך לאשר את תנאי השימוש וכתב הסרת האחריות לפני ההתחברות.")
             elif user_id != "ADMIN":
@@ -259,10 +262,17 @@ if not st.session_state.logged_in:
                         st.session_state.logged_in = True
                         st.session_state.current_user = user_id
                         st.session_state.is_admin = False
+                        if user_email:
+                            if user_id not in st.session_state.users_db:
+                                st.session_state.users_db[user_id] = {"join_date": today.strftime("%Y-%m-%d"), "last_payment_date": None}
+                            st.session_state.users_db[user_id]["email"] = user_email
                         st.rerun()
                     
                     if user_id in st.session_state.users_db:
                         user_data = st.session_state.users_db[user_id]
+                        if user_email:
+                            user_data["email"] = user_email
+                            
                         join_date = datetime.strptime(user_data["join_date"], "%Y-%m-%d").date()
                         
                         in_first_trial = (today - join_date).days <= 30
@@ -290,7 +300,8 @@ if not st.session_state.logged_in:
                     else:
                         st.session_state.users_db[user_id] = {
                             "join_date": today.strftime("%Y-%m-%d"),
-                            "last_payment_date": None
+                            "last_payment_date": None,
+                            "email": user_email
                         }
                         st.session_state.logged_in = True
                         st.session_state.current_user = user_id
@@ -337,7 +348,7 @@ elif st.session_state.is_admin:
         st.success("✅ נוסח הודעת התשלום עודכן בהצלחה!")
 
     st.markdown("---")
-    st.subheader("📋 רשימת משתמשים רשומים במערכת")
+    st.subheader("📋 רשימת משתמשים רשומים במערכת ומיילים לעדכון")
     
     if len(st.session_state.users_db) == 0 and len(st.session_state.exempt_users) == 0:
         st.info("ℹ️ עדיין אין משתמשים רשומים במערכת.")
@@ -349,6 +360,10 @@ elif st.session_state.is_admin:
         
         for uid in all_uids:
             is_exempt = uid in st.session_state.exempt_users
+            user_mail = "לא צוין"
+            if not is_exempt and uid in st.session_state.users_db:
+                user_mail = st.session_state.users_db[uid].get("email", "לא צוין")
+            
             if is_exempt:
                 status_str = "פטור מתשלום 🌟 (משפחה/חברים)"
                 last_p = "לא נדרש (פטור)"
@@ -369,9 +384,10 @@ elif st.session_state.is_admin:
             
             admin_data.append({
                 "תעודת זהות": uid, 
+                "אימייל לעדכונים": user_mail,
                 "תאריך הרשמה": join_d, 
                 "תשלום אחרון": last_p,
-                "סוג מנוי / סטטוס": status_str
+                "סטטוס": status_str
             })
         
         st.table(pd.DataFrame(admin_data))
