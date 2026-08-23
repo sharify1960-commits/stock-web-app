@@ -64,7 +64,6 @@ st.markdown("""
         border: 4px double #FFEDD5;
         margin: 25px auto;
         position: relative;
-        /* הוספת אלמנט גרף עולה ברקע של המעוין */
         background-image: linear-gradient(135deg, #EA580C 0%, #9A3412 100%), 
                           repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.07) 10px, rgba(255,255,255,0.07) 20px);
     }
@@ -73,7 +72,7 @@ st.markdown("""
         transform: rotate(-45deg);
         text-align: center;
         color: #FFF7ED;
-        font-family: 'Georgia', Times, serif; /* פונט מסולסל קלאסי */
+        font-family: 'Georgia', Times, serif;
     }
     /* אותיות מסולסלות גדולות עם קו כפול (Double Stroke effect) */
     .diamond-title-en {
@@ -156,6 +155,10 @@ st.markdown("""
 if 'users_db' not in st.session_state:
     st.session_state.users_db = {}
 
+# רשימת תעודות זהות פטורות מתשלום (משפחה / חברים)
+if 'exempt_users' not in st.session_state:
+    st.session_state.exempt_users = set()
+
 # מחיר מנוי חודשי דינמי
 if 'monthly_price' not in st.session_state:
     st.session_state.monthly_price = 75  # מחיר התחלתי 75 ש"ח כולל מע"מ
@@ -231,6 +234,13 @@ if not st.session_state.logged_in:
                 else:
                     today = datetime.now().date()
                     
+                    # בדיקה אם המשתמש פטור מתשלום (משפחה)
+                    if user_id in st.session_state.exempt_users:
+                        st.session_state.logged_in = True
+                        st.session_state.current_user = user_id
+                        st.session_state.is_admin = False
+                        st.rerun()
+                    
                     if user_id in st.session_state.users_db:
                         user_data = st.session_state.users_db[user_id]
                         join_date = datetime.strptime(user_data["join_date"], "%Y-%m-%d").date()
@@ -272,8 +282,8 @@ if not st.session_state.logged_in:
 
 # --- אזור ניהול (מנהל בלבד) ---
 elif st.session_state.is_admin:
-    st.markdown("<h1>🛠️ פאנל ניהול מנויים ועדכון מחירים</h1>", unsafe_allow_html=True)
-    st.write("כאן תוכל לעדכן את מחיר המנוי, לצפות בכל הלקוחות, ולאשר להם חידוש חודשי לאחר ששילמו.")
+    st.markdown("<h1>🛠️ פאנל ניהול מנויים ופטורים (משפחה)</h1>", unsafe_allow_html=True)
+    st.write("כאן תוכל לעדכן את מחיר המנוי, לנהל משתמשים, ולהגדיר בני משפחה או חברים שיהיו פטורים מתשלום לצמיתות.")
     
     if st.button("🚪 התנתק מפאנל מנהל"):
         st.session_state.logged_in = False
@@ -283,48 +293,83 @@ elif st.session_state.is_admin:
         
     st.markdown("---")
     
-    st.subheader("⚙️ הגדרת מחיר מנוי חודשי")
-    new_price = st.number_input("עדכן מחיר מנוי חודשי (ש״ח כולל מע״מ):", min_value=0, value=st.session_state.monthly_price, step=5)
-    if st.button("💾 שמור מחיר חדש"):
-        st.session_state.monthly_price = new_price
-        st.success(f"✅ המחיר החודשי עודכן בהצלחה ל-{new_price} ש״ח! מעתה הוא יופיע אוטומטית בחוזה ובהודעות התשלום.")
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.subheader("⚙️ הגדרת מחיר מנוי חודשי")
+        new_price = st.number_input("עדכן מחיר מנוי חודשי (ש״ח כולל מע״מ):", min_value=0, value=st.session_state.monthly_price, step=5)
+        if st.button("💾 שמור מחיר חדש"):
+            st.session_state.monthly_price = new_price
+            st.success(f"✅ המחיר החודשי עודכן בהצלחה ל-{new_price} ש״ח!")
+
+    with col_b:
+        st.subheader("👨‍👩‍👧 הוספת פטור מתשלום (משפחה)")
+        exempt_input = st.text_input("הכנס תעודת זהות של בן משפחה (9 ספרות):").strip()
+        if st.button("➕ הוסף לרשימת הפטורים מתשלום"):
+            if exempt_input.isdigit() and len(exempt_input) == 9:
+                st.session_state.exempt_users.add(exempt_input)
+                st.success(f"✅ ת.ז {exempt_input} הוגדרה כפטורה מתשלום לצמיתות!")
+            else:
+                st.error("❌ נא להזין מספר תעודת זהות תקין בן 9 ספרות.")
 
     st.markdown("---")
+    st.subheader("📋 רשימת משתמשים רשומים במערכת")
     
-    if len(st.session_state.users_db) == 0:
+    if len(st.session_state.users_db) == 0 and len(st.session_state.exempt_users) == 0:
         st.info("ℹ️ עדיין אין משתמשים רשומים במערכת.")
     else:
         admin_data = []
         today_date = datetime.now().date()
-        for uid, uinfo in st.session_state.users_db.items():
-            join_d = uinfo["join_date"]
-            last_p = uinfo.get("last_payment_date")
+        
+        # איסוף כל המשתמשים (גם אלו שהוזנו ישירות כפטורים)
+        all_uids = set(st.session_state.users_db.keys()).union(st.session_state.exempt_users)
+        
+        for uid in all_uids:
+            is_exempt = uid in st.session_state.exempt_users
+            if is_exempt:
+                status_str = "פטור מתשלום 🌟 (משפחה/חברים)"
+                last_p = "לא נדרש (פטור)"
+                join_d = "מוגדר כפטור"
+            else:
+                uinfo = st.session_state.users_db[uid]
+                join_d = uinfo["join_date"]
+                last_p = uinfo.get("last_payment_date")
+                
+                join_dt = datetime.strptime(join_d, "%Y-%m-%d").date()
+                is_active = (today_date - join_dt).days <= 30
+                if last_p:
+                    last_dt = datetime.strptime(last_p, "%Y-%m-%d").date()
+                    if (today_date - last_dt).days <= 30:
+                        is_active = True
+                
+                status_str = "פעיל 🟢 (בניסיון או שילם)" if is_active else "דרוש תשלום חודשי 🔴 (פג תוקף)"
             
-            join_dt = datetime.strptime(join_d, "%Y-%m-%d").date()
-            is_active = (today_date - join_dt).days <= 30
-            if last_p:
-                last_dt = datetime.strptime(last_p, "%Y-%m-%d").date()
-                if (today_date - last_dt).days <= 30:
-                    is_active = True
-            
-            status_str = "פעיל 🟢 (בניסיון או שילם)" if is_active else "דרוש תשלום חודשי 🔴 (פג תוקף)"
             admin_data.append({
                 "תעודת זהות": uid, 
                 "תאריך הרשמה": join_d, 
-                "תשלום אחרון": last_p if last_p else "טרם שילם (תקופת ניסיון)",
-                "סטטוס נוכחי": status_str
+                "תשלום אחרון": last_p,
+                "סוג מנוי / סטטוס": status_str
             })
         
         st.table(pd.DataFrame(admin_data))
         
-        st.markdown("### ✍️ אישור תשלום חודשי חדש ללקוח (חידוש מחזור)")
-        target_uid = st.text_input("הכנס תעודת זהות של הלקוח ששילם עבור החודש הנוכחי (9 ספרות):").strip()
-        if st.button("✅ אישור תשלום ופתיחת גישה לחודש נוסף"):
-            if target_uid in st.session_state.users_db:
-                st.session_state.users_db[target_uid]["last_payment_date"] = datetime.now().date().strftime("%Y-%m-%d")
-                st.success(f"המנוי עבור ת.ז {target_uid} עודכן! הגישה נפתחה לחודש נוסף מעכשיו.")
-            else:
-                st.error("❌ תעודת זהות זו לא נמצאה במערכת.")
+        st.markdown("### ✍️ פעולות ניהול מהירות")
+        target_uid = st.text_input("הכנס תעודת זהות לביצוע פעולה (9 ספרות):").strip()
+        
+        col_c, col_d = st.columns(2)
+        with col_c:
+            if st.button("✅ אישור תשלום חודשי רגיל"):
+                if target_uid in st.session_state.users_db:
+                    st.session_state.users_db[target_uid]["last_payment_date"] = datetime.now().date().strftime("%Y-%m-%d")
+                    st.success(f"המנוי עבור ת.ז {target_uid} עודכן לחודש נוסף!")
+                else:
+                    st.error("❌ ת.ז לא נמצאה בבסיס הנתונים הרגיל.")
+        with col_d:
+            if st.button("❌ הסר פטור מתשלום"):
+                if target_uid in st.session_state.exempt_users:
+                    st.session_state.exempt_users.remove(target_uid)
+                    st.success(f"הפטור עבור ת.ז {target_uid} הוסר בהצלחה.")
+                else:
+                    st.error("❌ ת.ז לא נמצאה ברשימת הפטורים.")
 
 # --- האפליקציה הראשית (מוצגת ללקוחות מורשים) ---
 else:
