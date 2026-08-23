@@ -217,10 +217,14 @@ if not st.session_state.logged_in:
         
         st.markdown("<div class='login-card'>", unsafe_allow_html=True)
         st.subheader("🔐 התחברות או הרשמה למערכת")
-        st.markdown("<p>הקליד תעודת זהות (<b>9 ספרות בדיוק</b>) וסיסמה (<b>6 הספרות האחרונות</b> של התעודת זהות)</p>", unsafe_allow_html=True)
+        st.markdown(
+            "<p><b>הנחיות כניסה:</b><br>"
+            "• בשדה תעודת הזהות: הכנס תעודת זהות בת <b>9 ספרות בדיוק</b>.<br>"
+            "• בשדה הסיסמה: הכנס בדיוק את <b>6 הספרות האחרונות</b> של מספר תעודת הזהות שלך.</p>"
+        , unsafe_allow_html=True)
         
         user_id = st.text_input("מספר תעודת זהות (9 ספרות / קוד מנהל):").strip()
-        user_password = st.text_input("סיסמה (6 ספרות אחרונות / סיסמת מנהל):", type="password").strip()
+        user_password = st.text_input("סיסמה (6 ספרות אחרונות של ת.ז / סיסמת מנהל):", type="password").strip()
         
         # שדה להזנת מייל עבור משתמשים חדשים שרוצים עדכונים יומיים אוטומטיים
         user_email = st.text_input("כתובת אימייל לקבלת דו״ח מניות יומי אוטומטי (אופציונלי):").strip()
