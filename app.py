@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# עיצוב CSS מותאם אישית (כיוון מימין לשמאל)
+# עיצוב CSS מותאם אישית (כיוון מימין לשמאל + שיפור נראות ועיצוב)
 st.markdown("""
     <style>
     .stApp {
@@ -42,12 +42,30 @@ st.markdown("""
         background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
         color: white;
     }
+    .login-card {
+        background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+        border: 1px solid #BFDBFE;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    .market-badge {
+        display: inline-block;
+        background-color: #DCFCE7;
+        color: #166534;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
     .contract-box {
         background-color: #ffffff;
         border: 1px solid #CBD5E1;
         padding: 20px;
         border-radius: 10px;
-        max-height: 250px;
+        max-height: 200px;
         overflow-y: scroll;
         margin-bottom: 15px;
         font-size: 0.9rem;
@@ -67,11 +85,9 @@ st.markdown("""
 
 # ניהול בסיס נתונים פנימי לזיכרון המערכת
 if 'users_db' not in st.session_state:
-    st.session_state.users_db = {
-        # מבנה לכל משתמש: {"join_date": "...", "last_payment_date": "..."}
-    }
+    st.session_state.users_db = {}
 
-# שדה נסתר / מנוהל לעדכון מחיר המנוי בקלות בכל רגע
+# מחיר מנוי חודשי דינמי
 if 'monthly_price' not in st.session_state:
     st.session_state.monthly_price = 75  # מחיר התחלתי 75 ש"ח כולל מע"מ
 
@@ -83,25 +99,36 @@ if 'logged_in' not in st.session_state:
 # סיסמת מנהל סודית
 ADMIN_SECRET_CODE = "999999" 
 
-# --- מסך הזדהות וכניסת משתמשים / מנהל ---
+# --- מסך הזדהות וכניסת משתמשים / מנהל מעוצב ---
 if not st.session_state.logged_in:
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 2.2, 1])
     with col2:
-        st.markdown("<h1>🔐 כניסת לקוחות למערכת</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748B;'>הזן מספר תעודת זהות (9 ספרות בדיוק) ו-6 ספרות אחרונות כסיסמה</p>", unsafe_allow_html=True)
+        # אזור לוגו וכותרת מרשימה
+        st.markdown("<div style='text-align: center; margin-top: 20px;'><span class='market-badge'>📈 פלטפורמת מסחר וניתוחים טכניים</span></div>", unsafe_allow_html=True)
+        st.markdown("<h1>⚡ StockScreener Pro</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #64748B; font-size: 1.05rem;'>מערכת חכמה לאיתור מניות מובילות, ניתוח RSI וייצור דוחות אקסל וגרפים מתקדמים בקליק אחד.</p>", unsafe_allow_html=True)
         
-        user_id = st.text_input("מספר תעודת זהות (9 ספרות / או קוד מנהל):").strip()
+        # קופסת כניסה מעוצבת
+        st.markdown("<div class='login-card'>", unsafe_allow_html=True)
+        st.subheader("🔐 התחברות לחשבון שלך")
+        st.markdown("<p style='color: #475569; font-size: 0.9rem;'>הקליד תעודת זהות (<b>9 ספרות בדיוק</b>) וסיסמה (<b>6 הספרות האחרונות</b> של התעודת זהות)</p>", unsafe_allow_html=True)
+        
+        user_id = st.text_input("מספר תעודת זהות (9 ספרות / קוד מנהל):").strip()
         user_password = st.text_input("סיסמה (6 ספרות אחרונות / סיסמת מנהל):", type="password").strip()
         
         # בדיקה האם זו כניסת מנהל
-        if user_id == "ADMIN" and user_password == ADMIN_SECRET_CODE:
+        is_admin_attempt = (user_id == "ADMIN" and user_password == ADMIN_SECRET_CODE)
+        
+        if is_admin_attempt:
             if st.button("התחבר כמנהל מערכת 🛠️"):
                 st.session_state.logged_in = True
                 st.session_state.current_user = "ADMIN"
                 st.session_state.is_admin = True
                 st.rerun()
         
-        # חוזה התקשרות והסרת אחריות משפטית (כולל המחיר המעודכן דינמית)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # חוזה התקשרות והסרת אחריות משפטית
         st.markdown("### 📄 תנאי שימוש והסרת אחריות משפטית")
         st.markdown(f"""
         <div class="contract-box">
@@ -113,7 +140,7 @@ if not st.session_state.logged_in:
         
         agreed = st.checkbox("אני מאשר/ת שקראתי את תנאי השימוש, הסרת האחריות ומדיניות התשלום ואני מסכים/ה להם.")
         
-        if st.button("התחבר למערכת"):
+        if st.button("התחבר למערכת 🚀"):
             if not agreed:
                 st.error("❌ עליך לאשר את תנאי השימוש וכתב הסרת האחריות לפני ההתחברות.")
             elif user_id != "ADMIN":
@@ -147,7 +174,6 @@ if not st.session_state.logged_in:
                             st.session_state.is_admin = False
                             st.rerun()
                         else:
-                            # הודעה מדויקת המציגה את הסכום המעודכן לתשלום חודשי!
                             st.markdown(f"""
                             <div class="payment-alert">
                                 <h3>⏳ תקופת הניסיון או מחזור החודש הנוכחי הסתיימו!</h3>
@@ -183,7 +209,7 @@ elif st.session_state.is_admin:
         
     st.markdown("---")
     
-    # --- שדה נסתר/גלוי לעדכון המחיר החודשי ---
+    # --- שדה לעדכון המחיר החודשי ---
     st.subheader("⚙️ הגדרת מחיר מנוי חודשי")
     new_price = st.number_input("עדכן מחיר מנוי חודשי (ש״ח כולל מע״מ):", min_value=0, value=st.session_state.monthly_price, step=5)
     if st.button("💾 שמור מחיר חדש"):
@@ -195,14 +221,12 @@ elif st.session_state.is_admin:
     if len(st.session_state.users_db) == 0:
         st.info("ℹ️ עדיין אין משתמשים רשומים במערכת.")
     else:
-        # הצגת טבלת משתמשים וסטטוס מחזור תשלום
         admin_data = []
         today_date = datetime.now().date()
         for uid, uinfo in st.session_state.users_db.items():
             join_d = uinfo["join_date"]
             last_p = uinfo.get("last_payment_date")
             
-            # בדיקת סטטוס האם פעיל כרגע
             join_dt = datetime.strptime(join_d, "%Y-%m-%d").date()
             is_active = (today_date - join_dt).days <= 30
             if last_p:
@@ -224,7 +248,6 @@ elif st.session_state.is_admin:
         target_uid = st.text_input("הכנס תעודת זהות של הלקוח ששילם עבור החודש הנוכחי (9 ספרות):").strip()
         if st.button("✅ אישור תשלום ופתיחת גישה לחודש נוסף"):
             if target_uid in st.session_state.users_db:
-                # מעדכן את תאריך התשלום האחרון להיום, מה שמאפס את המחזור לעוד 30 יום!
                 st.session_state.users_db[target_uid]["last_payment_date"] = datetime.now().date().strftime("%Y-%m-%d")
                 st.success(f"המנוי עבור ת.ז {target_uid} עודכן! הגישה נפתחה לחודש נוסף מעכשיו.")
             else:
@@ -232,11 +255,9 @@ elif st.session_state.is_admin:
 
 # --- האפליקציה הראשית (מוצגת ללקוחות מורשים) ---
 else:
-    # כותרת ראשית מעוצבת
     st.markdown("<h1>⚡ StockScreener Pro</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='color: #64748B; font-size: 1.1rem; font-weight: normal; text-align: center;'>מערכת מתקדמת לניתוח מניות, איתותי מומנטום, דוחות אקסל וגרפים ויזואליים</h3>", unsafe_allow_html=True)
     
-    # כפתור התנתקות קטן בצד
     if st.sidebar.button("🚪 התנתק מהמערכת"):
         st.session_state.logged_in = False
         st.session_state.current_user = None
@@ -244,7 +265,6 @@ else:
 
     st.markdown("---")
 
-    # --- סרגל צד (Sidebar) ---
     st.sidebar.header("⚙️ הגדרות ניתוח וסיכון")
     tickers_input = st.sidebar.text_input(
         "הזן סימולי מניות (מופרדים בפסיקים)", 
@@ -257,7 +277,6 @@ else:
     st.sidebar.markdown("---")
     run_scan = st.sidebar.button("🚀 הפק דו״ח וגרפים עכשיו")
 
-    # --- אזור הצגת הנתונים ---
     if run_scan:
         tickers = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
         
@@ -286,7 +305,6 @@ else:
                         weekly_return = ((current_price - float(close_prices.iloc[-5])) / float(close_prices.iloc[-5])) * 100 if len(close_prices) >= 5 else 0
                         monthly_return = ((current_price - float(close_prices.iloc[-21])) / float(close_prices.iloc[-21])) * 100 if len(close_prices) >= 21 else 0
 
-                        # מתנדים
                         delta = close_prices.diff()
                         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
                         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
@@ -297,7 +315,6 @@ else:
                         sma10 = float(close_prices.rolling(window=10).mean().iloc[-1])
                         sma20 = float(close_prices.rolling(window=20).mean().iloc[-1])
 
-                        # איתותים
                         signal = 'Hold 🟡'
                         if sma10 > sma20 and latest_rsi < (rsi_buy_threshold + 20):
                             signal = 'Buy 🟢'
@@ -326,18 +343,14 @@ else:
                 df = pd.DataFrame(results)
                 
                 st.success("✨ הסריקה הושלמה בהצלחה! הנה נתוני המניות והגרפים הויזואליים:")
-                
-                # הצגת טבלה חיה מעוצבת
                 st.dataframe(df, use_container_width=True)
 
-                # הצגת גרף ויזואלי חי לכל המניות שנבחרו
                 st.markdown("---")
                 st.markdown("<h2>📈 השוואת גרפי מחירים (6 חודשים אחרונים)</h2>", unsafe_allow_html=True)
                 if chart_data_dict:
                     df_charts = pd.DataFrame(chart_data_dict)
                     st.line_chart(df_charts)
 
-                # הכנת קובץ אקסל להורדה
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
                     df.to_excel(writer, index=False, sheet_name='Stock Report')
