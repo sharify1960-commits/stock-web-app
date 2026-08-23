@@ -56,25 +56,37 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ניהול בסיס נתונים פנימי (לדוגמה: שמירת תאריך הרשמה וסטטוס תשלום)
+# ניהול בסיס נתונים פנימי לזכרון המערכת
 if 'users_db' not in st.session_state:
     st.session_state.users_db = {
-        # דוגמה ללקוח ששילם כבר: "123456789": {"join_date": "2026-01-01", "paid": True}
+        # דוגמה למבנה: "123456789": {"join_date": "2026-08-01", "paid": False}
     }
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.current_user = None
+    st.session_state.is_admin = False
 
-# --- מסך הזדהות וכניסת משתמשים ---
+# הגדרת סיסמת מנהל סודית משלך (תוכל לשנות אותה כאן מתי שתרצה)
+ADMIN_SECRET_CODE = "999999" 
+
+# --- מסך הזדהות וכניסת משתמשים / מנהל ---
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("<h1>🔐 כניסת לקוחות למערכת</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748B;'>הזן את מספר תעודת הזהות שלך ו-6 הספרות האחרונות כסיסמה</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #64748B;'>הזן תעודת זהות ו-6 ספרות אחרונות כסיסמה</p>", unsafe_allow_html=True)
         
-        user_id = st.text_input("מספר תעודת זהות:")
-        user_password = st.text_input("סיסמה (6 ספרות אחרונות של הת.ז):", type="password")
+        user_id = st.text_input("מספר תעודת זהות (או קוד מנהל):")
+        user_password = st.text_input("סיסמה (6 ספרות אחרונות / סיסמת מנהל):", type="password")
+        
+        # בדיקה האם זו כניסת מנהל
+        if user_id == "ADMIN" and user_password == ADMIN_SECRET_CODE:
+            if st.button("התחבר כמנהל מערכת 🛠️"):
+                st.session_state.logged_in = True
+                st.session_state.current_user = "ADMIN"
+                st.session_state.is_admin = True
+                st.rerun()
         
         # חוזה התקשרות והסרת אחריות משפטית
         st.markdown("### 📄 תנאי שימוש והסרת אחריות משפטית")
@@ -104,6 +116,7 @@ if not st.session_state.logged_in:
                     if days_passed <= 30 or user_data.get("paid", False):
                         st.session_state.logged_in = True
                         st.session_state.current_user = user_id
+                        st.session_state.is_admin = False
                         st.rerun()
                     else:
                         st.warning("⏳ תקופת הניסיון החינמית שלך (30 יום) הסתיימה.")
@@ -116,12 +129,47 @@ if not st.session_state.logged_in:
                     }
                     st.session_state.logged_in = True
                     st.session_state.current_user = user_id
+                    st.session_state.is_admin = False
                     st.success("🎉 נרשמת בהצלחה! הוענק לך חודש ניסיון חינם למערכת.")
                     st.rerun()
             else:
                 st.error("❌ מספר תעודת זהות או סיסמה שגויים (יש לוודא שהוזנו 6 הספרות האחרונות הנכונות).")
 
-# --- האפליקציה הראשית (מוצגת רק לאחר התחנות ומעבר בדיקה) ---
+# --- אזור ניהול (מנהל בלבד) ---
+elif st.session_state.is_admin:
+    st.markdown("<h1>🛠️ פאנל ניהול מנויים ומאשר תשלומים</h1>", unsafe_allow_html=True)
+    st.write("כאן תוכל לצפות בכל הלקוחות שנרשמו למערכת ולאשר להם תשלום ידנית בלחיצת כפתור.")
+    
+    if st.button("🚪 התנתק מפאנל מנהל"):
+        st.session_state.logged_in = False
+        st.session_state.current_user = None
+        st.session_state.is_admin = False
+        st.rerun()
+        
+    st.markdown("---")
+    
+    if len(st.session_state.users_db) == 0:
+        st.info("ℹ️ עדיין אין משתמשים רשומים במערכת.")
+    else:
+        # הצגת טבלת משתמשים
+        admin_data = []
+        for uid, uinfo in st.session_state.users_db.items():
+            join_d = uinfo["join_date"]
+            is_p = "כן 🟢" if uinfo["paid"] else "לא 🔴"
+            admin_data.append({"תעודת זהות": uid, "תאריך הרשמה": join_d, "האם שילם?": is_p})
+        
+        st.table(pd.DataFrame(admin_data))
+        
+        st.markdown("### ✍️ אישור תשלום ללקוח לפי תעודת זהות")
+        target_uid = st.text_input("הכנס תעודת זהות של הלקוח ששילם:")
+        if st.button("✅ אשר תשלום ופתח מנוי קבוע"):
+            if target_uid in st.session_state.users_db:
+                st.session_state.users_db[target_uid]["paid"] = True
+                st.success(st.format("המנוי עבור ת.ז {target_uid} עודכן בהצלחה כ'שילם'! הגישה נפתחה."))
+            else:
+                st.error("❌ תעודת זהות זו לא נמצאה במערכת.")
+
+# --- האפליקציה הראשית (מוצגת ללקוחות מורשים) ---
 else:
     # כותרת ראשית מעוצבת
     st.markdown("<h1>⚡ StockScreener Pro</h1>", unsafe_allow_html=True)
