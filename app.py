@@ -169,9 +169,16 @@ st.markdown("""
 if 'users_db' not in st.session_state:
     st.session_state.users_db = {}
 
-# רשימת תעודות זהות פטורות מתשלום (משפחה / חברים)
+# רשימת תעודות זהות פטורות מתשלום עם הרשימה הראשונית שהגדרת
 if 'exempt_users' not in st.session_state:
-    st.session_state.exempt_users = set()
+    st.session_state.exempt_users = {
+        "056426984", 
+        "058281395", 
+        "301589305", 
+        "322638784", 
+        "315213256", 
+        "204630164"
+    }
 
 # מחיר מנוי חודשי דינמי
 if 'monthly_price' not in st.session_state:
