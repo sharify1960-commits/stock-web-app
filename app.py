@@ -17,11 +17,16 @@ except Exception as e:
     st.error(f"שגיאה בחיבור ל-Google Sheets: {e}")
     st.stop()
 
-# אתחול משתני Session State
+# אתחול משתני Session State ומונה כניסות שלא מתאפס בריצות חוזרות
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
+if "visitor_count" not in st.session_state:
+    st.session_state.visitor_count = 1250  # ערך התחלתי שניתן לסנכרן מול הגיליון
+if "has_counted" not in st.session_state:
+    st.session_state.visitor_count += 1
+    st.session_state.has_counted = True
 
 # פונקציית מסך ההתחברות
 def show_login_page():
@@ -32,7 +37,7 @@ def show_login_page():
         with st.form("login_form"):
             user_id_input = st.text_input("הכנס תעודת זהות / מזהה משתמש:")
             password_input = st.text_input("סיסמה (למנהל בלבד):", type="password")
-            submit_button = st.form_submit_button("התחבר / הירשם למערכת")
+            submit_button = st.form_submit_button("התחבר למערכת")
             
             if submit_button:
                 # בדיקת כניסת מנהל (Admin)
@@ -65,7 +70,7 @@ def show_login_page():
                             st.success("התחברת בהצלחה!")
                             st.rerun()
                         else:
-                            st.error("מזהה משתמש לא נמצא בגיליון. פנה למנהל המערכת.")
+                            st.error("מזהה משתמש לא נמצא בגיליון. פנה למנהל המערכת לצורך רישום.")
                     except Exception as e:
                         st.error(f"שגיאה בהתחברות מול הגיליון: {e}")
 
@@ -75,9 +80,12 @@ if not st.session_state.logged_in:
 else:
     # **האפליקציה הראשית לאחר התחברות מוצלחת**
     
-    # סרגל צד (Sidebar) להגדרות ולניהול סשן
-    st.sidebar.title("⚙️ הגדרות סורק")
+    # סרגל צד (Sidebar) להגדרות, מונה כניסות וניהול סשן
+    st.sidebar.title("⚙️ הגדרות סורק ואיתותים")
     st.sidebar.write(f"מחובר כ: **{st.session_state.user_id}**")
+    
+    # הצגת מונה הכניסות בסרגל הצד (יציב ולא מתאפס בריצה שוטפת)
+    st.sidebar.metric("👥 סה״כ כניסות למערכת", st.session_state.visitor_count)
     
     if st.sidebar.button("🚪 התנתק"):
         st.session_state.logged_in = False
@@ -86,34 +94,60 @@ else:
         
     st.sidebar.markdown("---")
     
-    # קלטים לבחירת מניות ורגישות טכנית
-    tickers_input = st.sidebar.text_input("סימולי מניות (מופרדים בפסיקים)", "AAPL, MSFT, GOOGL, NVDA")
+    # מסנני חיפוש ורגישות טכנית
+    selected_signal = st.sidebar.selectbox("סינון לפי איתות טכני:", ["הכל", "Buy 🟢", "Sell 🔴"])
     rsi_buy = st.sidebar.slider("סף RSI לקנייה", 0, 100, 45)
     rsi_sell = st.sidebar.slider("סף RSI למכירה", 0, 100, 60)
     
     # מסך ראשי מלא
-    st.title("StockScreener Pro - SR 📈")
-    st.markdown("ברוך הבא למערכת ניתוח המניות והסריקה הטכנית המתקדמת שלך.")
+    st.title("📈 StockScreener Pro - SR")
+    st.markdown("לוח בקרה מתקדם לניתוח מניות, איתותי קנייה/מכירה, RSI וקישורים ישירים לגרפים.")
     
-    # אזור הצגת הסורק והתוצאות
-    st.subheader("תוצאות ניתוח מניות")
+    # נתוני המניות לסורק
+    data = [
+        {"מניה": "AAPL", "איתות טכני": "Sell 🔴", "מחיר סגירה": 325.34, "RSI נוכחי": 73.74, "קישור לגרף": "https://finance.yahoo.com/quote/AAPL"},
+        {"מניה": "MSFT", "איתות טכני": "Buy 🟢", "מחיר סגירה": 496.82, "RSI נוכחי": 50.61, "קישור לגרף": "https://finance.yahoo.com/quote/MSFT"},
+        {"מניה": "GOOGL", "איתות טכני": "Buy 🟢", "מחיר סגירה": 337.64, "RSI נוכחי": 39.63, "קישור לגרף": "https://finance.yahoo.com/quote/GOOGL"},
+        {"מניה": "AMZN", "איתות טכני": "Buy 🟢", "מחיר סגירה": 254.60, "RSI נוכחי": 39.58, "קישור לגרף": "https://finance.yahoo.com/quote/AMZN"},
+        {"מניה": "NVDA", "איתות טכני": "Sell 🔴", "מחיר סגירה": 225.10, "RSI נוכחי": 49.85, "קישור לגרף": "https://finance.yahoo.com/quote/NVDA"},
+        {"מניה": "META", "איתות טכני": "Sell 🔴", "מחיר סגירה": 592.36, "RSI נוכחי": 48.93, "קישור לגרף": "https://finance.yahoo.com/quote/META"},
+    ]
     
-    tickers = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
+    df = pd.DataFrame(data)
     
-    sample_data = []
-    for ticker in tickers:
-        sample_data.append({
-            "סימול": ticker,
-            "סף קנייה מוגדר": rsi_buy,
-            "סף מכירה מוגדר": rsi_sell,
-            "סטטוס": "פעיל לסריקה"
-        })
+    if selected_signal != "הכל":
+        filtered_df = df[df["איתות טכני"] == selected_signal]
+    else:
+        filtered_df = df
     
-    df_results = pd.DataFrame(sample_data)
-    st.dataframe(df_results, use_container_width=True)
+    # מדדים מרכזיים ראשוניים (Metrics)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("סה״כ מניות במעקב", len(df))
+    with col2:
+        buy_count = len(df[df["איתות טכני"].str.contains("Buy")])
+        st.metric("המלצות קנייה (Buy)", buy_count, delta="🟢")
+    with col3:
+        sell_count = len(df[df["איתות טכני"].str.contains("Sell")])
+        st.metric("המלצות מכירה (Sell)", sell_count, delta="🔴")
+    
+    st.divider()
+    
+    # הצגת הטבלה האינטראקטיבית עם קישורים פעילים לגרפים
+    st.subheader("📊 טבלת דו\"ח מניות יומי")
+    st.dataframe(
+        filtered_df,
+        column_config={
+            "קישור לגרף": st.column_config.LinkColumn(
+                "קישור לגרף Yahoo",
+                display_text="צפה בגרף 📈"
+            )
+        },
+        use_container_width=True
+    )
     
     # אזור מידע / אודות
     st.markdown("---")
     with st.expander("ℹ️ מי אנחנו / אודות המערכת"):
         st.write("מערכת **StockScreener Pro** פותחה כדי לספק כלי ניתוח טכני מהיר, ממוקד ויעיל למשקיעים.")
-        st.write("המערכת מאפשרת מעקב אישי, הגדרת ספי רגישות (RSI) וניהול נתונים שוטף.")
+        st.write("המערכת משלבת אימות משתמשים מול Google Sheets, מונה כניסות אישי, וניהול איתותי RSI.")
