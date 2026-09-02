@@ -118,7 +118,6 @@ if not st.session_state["logged_in"]:
                     st.session_state["role"] = "user"
                     st.session_state["user_email"] = user_email_input
                     
-                    # Register user automatically to subscribers list (active = True)
                     subs = load_subscribers()
                     subs[user_email_input] = {"active": True, "id": username}
                     save_subscribers(subs)
@@ -155,6 +154,46 @@ else:
             st.sidebar.success("השליחה האוטומטית הופעלה מחדש.")
             st.rerun()
 
+    st.sidebar.markdown("---")
+    st.sidebar.header("⚙️ סרגלי ניתוח טכני ופרמטרים")
+    
+    rsi_buy = st.sidebar.slider("סף קנייה יתר (Oversold RSI):", min_value=10, max_value=40, value=30, step=1)
+    st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> מדד RSI נמוך מסף זה מסמן שנכס נסחר ביתר מכירה ויכול להוות הזדמנות כניסה.</div>', unsafe_allow_html=True)
+    
+    rsi_sell = st.sidebar.slider("סף מכירת יתר (Overbought RSI):", min_value=60, max_value=90, value=70, step=1)
+    st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> מדד RSI גבוה מסף זה מצביע על נכס במצב קניית יתר וסיכון לתיקון חד.</div>', unsafe_allow_html=True)
+    
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("##### ממוצעים נעים (Moving Averages)")
+    ma_short = st.sidebar.selectbox("תקופת ממוצע קצר (SMA Short):", [10, 20, 50], index=1)
+    st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> משקף את מומנטום המחירים בטווח הקצר.</div>', unsafe_allow_html=True)
+    
+    ma_long = st.sidebar.selectbox("תקופת ממוצע ארוך (SMA Long):", [100, 150, 200], index=2)
+    st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> מגדיר את המגמה הראשית של השוק לטווח הארוך.</div>', unsafe_allow_html=True)
+
+    # Add new stock section in sidebar
+    st.sidebar.markdown("---")
+    st.sidebar.header("➕ הוספת מניה חדשה למערכת")
+    with st.sidebar.form("add_stock_form"):
+        new_symbol = st.text_input("סימול מניה (למשל TSLA):")
+        new_name = st.text_input("שם חברה מלא:")
+        new_price = st.number_input("מחיר ($):", min_value=0.1, value=100.0)
+        new_rsi = st.number_input("ערך RSI:", min_value=0.0, max_value=100.0, value=50.0)
+        add_btn = st.form_submit_button("הוסף מניה למעקב")
+        
+        if add_btn and new_symbol and new_name:
+            st.session_state["stocks_list"].append({
+                "סימול": new_symbol.upper(),
+                "שם חברה": new_name,
+                "מחיר ($)": new_price,
+                "RSI": new_rsi,
+                "מגמת SMA": "ניטרלי",
+                "שינוי יומי (%)": "+0.0%",
+                "המלצה": "בדיקה"
+            })
+            st.sidebar.success(f"המניה {new_symbol.upper()} נוספה בהצלחה!")
+
+    st.sidebar.markdown("---")
     if st.sidebar.button("התנתק"):
         st.session_state["logged_in"] = False
         st.session_state["role"] = ""
