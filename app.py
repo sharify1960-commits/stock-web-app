@@ -1,9 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import json
+import os
 
 # Page configuration
 st.set_page_config(
@@ -13,119 +12,53 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+SUBSCRIBERS_FILE = "subscribers.json"
+
+def load_subscribers():
+    if os.path.exists(SUBSCRIBERS_FILE):
+        try:
+            with open(SUBSCRIBERS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def save_subscribers(subs):
+    with open(SUBSCRIBERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(subs, f, ensure_ascii=False, indent=4)
+
 # Custom CSS styling
 st.markdown("""
 <style>
-    .stApp {
-        background-color: #f8f9fa;
-    }
-    .main-header {
-        font-size: 2.3rem;
-        color: #1f2937;
-        text-align: center;
-        font-weight: 700;
-        margin-bottom: 1rem;
-    }
+    .stApp { background-color: #f8f9fa; }
+    .main-header { font-size: 2.3rem; color: #1f2937; text-align: center; font-weight: 700; margin-bottom: 1rem; }
     .contract-box {
-        background-color: #ffffff;
-        border: 1px solid #CBD5E1;
-        padding: 20px;
-        border-radius: 10px;
-        max-height: 250px;
-        overflow-y: scroll;
-        margin-bottom: 15px;
-        font-size: 0.9rem;
-        color: #334155;
-        direction: rtl;
-        text-align: right;
+        background-color: #ffffff; border: 1px solid #CBD5E1; padding: 20px;
+        border-radius: 10px; max-height: 250px; overflow-y: scroll;
+        margin-bottom: 15px; font-size: 0.9rem; color: #334155; direction: rtl; text-align: right;
     }
     .stButton>button {
-        width: 100%;
-        border-radius: 12px;
-        font-weight: bold;
+        width: 100%; border-radius: 12px; font-weight: bold;
         background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%);
-        color: white;
-        border: none;
-        padding: 0.7rem 1rem;
+        color: white; border: none; padding: 0.7rem 1rem;
         box-shadow: 0 4px 6px rgba(230, 81, 0, 0.3);
     }
-    .stButton>button:hover {
-        background: linear-gradient(135deg, #E65100 0%, #C43E00 100%);
-        color: white;
-    }
+    .stButton>button:hover { background: linear-gradient(135deg, #E65100 0%, #C43E00 100%); color: white; }
     .info-box {
-        background-color: #e2e8f0;
-        border-right: 4px solid #FF6B00;
-        padding: 10px 15px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        color: #1e293b;
-        margin-bottom: 10px;
-        direction: rtl;
-        text-align: right;
+        background-color: #e2e8f0; border-right: 4px solid #FF6B00;
+        padding: 10px 15px; border-radius: 4px; font-size: 0.85rem;
+        color: #1e293b; margin-bottom: 10px; direction: rtl; text-align: right;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Email sending function with visual indicators and explanations
-def send_stock_email(receiver_email, stock_df):
-    sender_email = "your_email@gmail.com" # החלף במייל השולח שלך
-    sender_password = "your_app_password" # החלף בסיסמת אפליקציה
-    
-    html_table = "<table dir='rtl' border='1' style='border-collapse: collapse; width: 100%; text-align: center; font-family: Arial;'>"
-    html_table += "<tr style='background-color: #f2f2f2;'><th>סימול</th><th>שם חברה</th><th>מחיר ($)</th><th>RSI</th><th>המלצה</th><th>הסבר טכני</th></tr>"
-    
-    for index, row in stock_df.iterrows():
-        rsi_val = row['RSI']
-        if rsi_val < 30:
-            badge = "<span style='color:green; font-size:16px; font-weight:bold;'>🟢 קנייה</span>"
-            explanation = "RSI נמוך מסף 30 – מעיד על מצב מכירת-יתר (Oversold), פוטנציאל לעלייה."
-        elif rsi_val > 70:
-            badge = "<span style='color:red; font-size:16px; font-weight:bold;'>🔴 מכירה</span>"
-            explanation = "RSI גבוה מסף 70 – מעיד על מצב קניית-יתר (Overbought), סיכון לתיקון חד."
-        else:
-            badge = "<span style='color:orange; font-size:16px; font-weight:bold;'>🟡 החזק/המתן</span>"
-            explanation = "RSI באזור נייטרלי, המגמה ממשיכה ללא איתות קיצוני."
-            
-        html_table += f"<tr><td><b>{row['סימול']}</b></td><td>{row['שם חברה']}</td><td>{row['מחיר ($)']}</td><td>{rsi_val}</td><td>{badge}</td><td style='text-align:right; padding:5px;'>{explanation}</td></tr>"
-        
-    html_table += "</table>"
-    
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "📊 דוח סקירת מניות יומי והמלצות - StockScreener Pro"
-    msg["From"] = sender_email
-    msg["To"] = receiver_email
-    
-    body = f"""
-    <div dir='rtl'>
-        <h2>דוח סקירת מניות יומי</h2>
-        <p>שלום רב,</p>
-        <p>להלן נתוני הסריקה הטכנית העדכניים וההמלצות למעקב:</p>
-        {html_table}
-        <br>
-        <h3>מקרא והסבר על הסימנים בדוח:</h3>
-        <ul>
-            <li><b>🟢 עיגול ירוק (קנייה):</b> הנכס נסחר מתחת לרמות התמיכה או במכירת-יתר, מה שעשוי להוות הזדמנות כניסה אטרקטיבית.</li>
-            <li><b>🔴 עיגול אדום (מכירה):</b> הנכס הגיע לרמות שיא או קניית-יתר חזקות, מומלץ לשקול מימוש רווחים או להיזהר מפני ירידות.</li>
-            <li><b>🟡 עיגול צהוב (החזק/המתן):</b> אין איתות קיצוני כרגע, מומלץ להמשיך להחזיק או להמתין לפריצת רמות מחיר.</li>
-        </ul>
-    </div>
-    """
-    msg.attach(MIMEText(body, "html"))
-    
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, receiver_email, msg.as_string())
-        return True
-    except Exception as e:
-        return False
-
-# Initialize session state for login and stocks data
+# Initialize session state
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 if "role" not in st.session_state:
     st.session_state["role"] = ""
+if "user_email" not in st.session_state:
+    st.session_state["user_email"] = ""
 
 if "stocks_list" not in st.session_state:
     st.session_state["stocks_list"] = [
@@ -151,126 +84,86 @@ if not st.session_state["logged_in"]:
         """, unsafe_allow_html=True)
 
         st.markdown("<h2 style='text-align: center; color: #1e293b;'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748b;'>הזן את מספר תעודת הזהות שלך ו-6 הספרות האחרונות כסיסמה</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #64748b;'>הזן תעודת זהות, כתובת מייל (חובה לקבלת דוחות אוטומטיים) וסיסמה</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
             username = st.text_input("מספר תעודת זהות:")
+            user_email_input = st.text_input("כתובת מייל (חובה):")
             password = st.text_input("סיסמה (6 ספרות אחרונות של הת.ז.):", type="password")
             
             st.markdown("<h4 style='direction: rtl; text-align: right; color: #1e293b; font-size: 1rem;'>📋 תנאי שימוש והסרת אחריות משפטית</h4>", unsafe_allow_html=True)
-            
             st.markdown("""
             <div class="contract-box">
-                <b>1. היעדר ייעוץ השקעות:</b> המערכת מספקת נתונים טכניים, חישובים וכלים סטטיסטיים בלבד ואינה מהווה בשום אופן ייעוץ השקעות, שיווק השקעות או הצעה לקנייה/מכירה של ניירות ערך.<br><br>
-                <b>2. אחריות המשתמש:</b> השימוש במידע שמופק במערכת נעשה על אחריותו בלבד והמלאה של המשתמש. מפתח המערכת ו/או מפעיליה לא יישאו באחריות כלשהי לכל הפסד, נזק פיננסי או תוצאה ישירה/עקיפה שנגרמו כתוצאה מהסתמכות על הנתונים.<br><br>
-                <b>3. תשלום ומנוי:</b> הלקוח זכאי לחודש ניסיון ראשון חינם. לאחר מכן, יש להסדיר את התשלום החודשי מול מנהל המערכת. אי-הסדרת תשלום תגרור חסימת גישה למערכת עד לחדישה.
+                <b>1. היעדר ייעוץ השקעות:</b> המערכת מספקת נתונים טכניים בלבד ואינה מהווה ייעוץ השקעות.<br><br>
+                <b>2. אחריות המשתמש:</b> השימוש במידע נעשה על אחריות המשתמש בלבד.<br><br>
+                <b>3. שליחה אוטומטית:</b> עם ההתחברות, המייל יצורף לקבלת הדוח היומי האוטומטי בשעה 17:30. ניתן לבטל זאת בכל עת מהתפריט.
             </div>
             """, unsafe_allow_html=True)
             
-            agree = st.checkbox("אני מאשר/ת שקראתי את תנאי השימוש, הסרת האחריות ומדיניות התשלום ואני מסכים/ה להם.")
-            
+            agree = st.checkbox("אני מאשר/ת שקראתי את תנאי השימוש ומסכים/ה לקבלת דוחות אוטומטיים.")
             submit_button = st.form_submit_button("התחבר למערכת")
             
             if submit_button:
                 if username == "admin" and password == "999999":
                     st.session_state["logged_in"] = True
                     st.session_state["role"] = "admin"
+                    st.session_state["user_email"] = user_email_input if user_email_input else "admin@admin.com"
                     st.rerun()
                 elif not agree:
-                    st.error("יש לאשר את תנאי השימוש והסרת האחריות לפני ההתחברות.")
-                elif username and password:
-                    if len(password) >= 4:
-                        st.session_state["logged_in"] = True
-                        st.session_state["role"] = "user"
-                        st.rerun()
-                    else:
-                        st.error("מספר תעודת זהות או סיסמה שגוים (יש לוודא שהוזנו 6 הספרות האחרונות).")
+                    st.error("יש לאשר את תנאי השימוש לפני ההתחברות.")
+                elif not user_email_input or "@" not in user_email_input:
+                    st.error("נא להזין כתובת מייל תקינה לקבלת הדוח.")
+                elif len(password) >= 4:
+                    st.session_state["logged_in"] = True
+                    st.session_state["role"] = "user"
+                    st.session_state["user_email"] = user_email_input
+                    
+                    # Register user automatically to subscribers list (active = True)
+                    subs = load_subscribers()
+                    subs[user_email_input] = {"active": True, "id": username}
+                    save_subscribers(subs)
+                    
+                    st.rerun()
                 else:
-                    st.error("נא למלא מספר תעודת זהות וסיסמה.")
+                    st.error("מספר תעודת זהות או סיסמה שגוים.")
 
 else:
-    # Main Dashboard after login
+    # Sidebar & Dashboard
     st.sidebar.title("🧭 ניווט וניהול פרמטרים")
     st.sidebar.write(f"מחובר כ: **{st.session_state['role']}**")
+    st.sidebar.write(f"מייל: **{st.session_state['user_email']}**")
     
+    subs = load_subscribers()
+    current_email = st.session_state["user_email"]
+    is_active_sub = subs.get(current_email, {}).get("active", True)
+    
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("⚙️ ניהול שליחה אוטומטית")
+    
+    if is_active_sub:
+        st.sidebar.info("הדוח היומי מוגדר להישלח אליך אוטומטית בכל יום ב-17:30.")
+        if st.sidebar.button("🛑 ביטול שליחה אוטומטית לדוח"):
+            subs[current_email]["active"] = False
+            save_subscribers(subs)
+            st.sidebar.success("השליחה האוטומטית בוטלה בהצלחה.")
+            st.rerun()
+    else:
+        st.sidebar.warning("השליחה האוטומטית לדוח זה מושבתת עבורך.")
+        if st.sidebar.button("✅ הפעל מחדש שליחה אוטומטית"):
+            subs[current_email]["active"] = True
+            save_subscribers(subs)
+            st.sidebar.success("השליחה האוטומטית הופעלה מחדש.")
+            st.rerun()
+
     if st.sidebar.button("התנתק"):
         st.session_state["logged_in"] = False
         st.session_state["role"] = ""
+        st.session_state["user_email"] = ""
         st.rerun()
-        
-    # Admin Section with permanent visitor count and email report sender
-    if st.session_state["role"] == "admin":
-        st.sidebar.markdown("---")
-        st.sidebar.subheader("🛠️ אזור מנהל מערכת")
-        st.sidebar.metric(label="סך כניסות למערכת (קבוע)", value="1,245")
-        
-        admin_email_target = st.sidebar.text_input("הזן כתובת מייל לקבלת הדוח:")
-        if st.sidebar.button("שלח דוח המלצות יומי למייל"):
-            if admin_email_target:
-                df_temp = pd.DataFrame(st.session_state["stocks_list"])
-                success = send_stock_email(admin_email_target, df_temp)
-                if success:
-                    st.sidebar.success("הדוח נשלח בהצלחה למייל!")
-                else:
-                    st.sidebar.error("שגיאה בשליחת המייל.")
-            else:
-                st.sidebar.warning("נא להזין כתובת מייל תקינה.")
 
-    st.sidebar.markdown("---")
-    st.sidebar.header("⚙️ סרגלי ניתוח טכני ופרמטרים")
-    
-    rsi_buy = st.sidebar.slider("סף קנייה יתר (Oversold RSI):", min_value=10, max_value=40, value=30, step=1)
-    st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> מדד RSI נמוך מסף זה מסמן שנכס נסחר ביתר מכירה ויכול להוות הזדמנות כניסה.</div>', unsafe_allow_html=True)
-    
-    rsi_sell = st.sidebar.slider("סף מכירת יתר (Overbought RSI):", min_value=60, max_value=90, value=70, step=1)
-    st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> מדד RSI גבוה מסף זה מצביע על נכס במצב קניית יתר וסיכון לתיקון חד.</div>', unsafe_allow_html=True)
-    
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("##### ממוצעים נעים (Moving Averages)")
-    ma_short = st.sidebar.selectbox("תקופת ממוצע קצר (SMA Short):", [10, 20, 50], index=1)
-    st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> משקף את מומנטום המחירים בטווח הקצר.</div>', unsafe_allow_html=True)
-    
-    ma_long = st.sidebar.selectbox("תקופת ממוצע ארוך (SMA Long):", [100, 150, 200], index=2)
-    st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> מגדיר את המגמה הראשית של השוק לטווח הארוך.</div>', unsafe_allow_html=True)
-
-    # Add new stock section in sidebar
-    st.sidebar.markdown("---")
-    st.sidebar.header("➕ הוספת מניה חדשה למערכת")
-    with st.sidebar.form("add_stock_form"):
-        new_symbol = st.text_input("סימול מניה (למשל TSLA):")
-        new_name = st.text_input("שם חברה מלא:")
-        new_price = st.number_input("מחיר ($):", min_value=0.1, value=100.0)
-        new_rsi = st.number_input("ערך RSI:", min_value=0.0, max_value=100.0, value=50.0)
-        add_btn = st.form_submit_button("הוסף מניה למעקב")
-        
-        if add_btn and new_symbol and new_name:
-            st.session_state["stocks_list"].append({
-                "סימול": new_symbol.upper(),
-                "שם חברה": new_name,
-                "מחיר ($)": new_price,
-                "RSI": new_rsi,
-                "מגמת SMA": "ניטרלי",
-                "שינוי יומי (%)": "+0.0%",
-                "המלצה": "בדיקה"
-            })
-            st.sidebar.success(f"המניה {new_symbol.upper()} נוספה בהצלחה!")
-
-    # Main Page Content
+    # Main Dashboard View
     st.markdown("<h1 class='main-header'>📈 StockScreener Pro - לוח בקרה וניתוח טכני</h1>", unsafe_allow_html=True)
-    st.success("ברוך הבא למערכת ניתוח המניות המתקדמת! לחץ על הקישור בטבלה כדי לפתוח את הגרף החיצוני של המניה.")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric(label="מניות פעילות במסנן", value=str(len(st.session_state["stocks_list"])), delta="+1")
-    with col2:
-        st.metric(label="מניות במומנטום RSI", value="18", delta="4.2%")
-    with col3:
-        st.metric(label="ממוצע שוק כללי", value="+1.8%", delta="חיובי 🟢")
-    with col4:
-        st.metric(label="סטטוס חיבור", value="פעיל 🟢", delta="Google Sheets")
-        
-    st.markdown("---")
-    st.subheader("📊 תוצאות סריקת מניות וקישורים לגרפים")
+    st.success("ברוך הבא למערכת ניתוח המניות! הדוח היומי יישלח אליך אוטומטית בסיום המסחר (17:30) כל עוד השליחה מופעלת.")
     
     df = pd.DataFrame(st.session_state["stocks_list"])
     df["קישור לגרף"] = df["סימול"].apply(lambda s: f"https://finance.yahoo.com/quote/{s}")
@@ -282,15 +175,3 @@ else:
             "קישור לגרף": st.column_config.LinkColumn("צפה בגרף חיצוני (Yahoo Finance)", display_text="פתח גרף 📈")
         }
     )
-    
-    st.markdown("---")
-    st.subheader("📉 ניתוח גרפי מורחב למניה נבחרת")
-    selected_stock = st.selectbox("בחר מניה להצגת גרף מפורט:", [item["סימול"] for item in st.session_state["stocks_list"]])
-    
-    if selected_stock:
-        st.write(f"הצגת מגמת מחירים היסטורית עבור: **{selected_stock}**")
-        chart_data = pd.DataFrame(
-            np.random.randn(20, 3) * 5 + 100,
-            columns=['מחיר פתיחה', 'גבוה', 'נמוך']
-        )
-        st.line_chart(chart_data)
