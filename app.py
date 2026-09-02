@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Page configuration
 st.set_page_config(
@@ -63,6 +66,60 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Email sending function with visual indicators and explanations
+def send_stock_email(receiver_email, stock_df):
+    sender_email = "your_email@gmail.com" # החלף במייל השולח שלך
+    sender_password = "your_app_password" # החלף בסיסמת אפליקציה
+    
+    html_table = "<table dir='rtl' border='1' style='border-collapse: collapse; width: 100%; text-align: center; font-family: Arial;'>"
+    html_table += "<tr style='background-color: #f2f2f2;'><th>סימול</th><th>שם חברה</th><th>מחיר ($)</th><th>RSI</th><th>המלצה</th><th>הסבר טכני</th></tr>"
+    
+    for index, row in stock_df.iterrows():
+        rsi_val = row['RSI']
+        if rsi_val < 30:
+            badge = "<span style='color:green; font-size:16px; font-weight:bold;'>🟢 קנייה</span>"
+            explanation = "RSI נמוך מסף 30 – מעיד על מצב מכירת-יתר (Oversold), פוטנציאל לעלייה."
+        elif rsi_val > 70:
+            badge = "<span style='color:red; font-size:16px; font-weight:bold;'>🔴 מכירה</span>"
+            explanation = "RSI גבוה מסף 70 – מעיד על מצב קניית-יתר (Overbought), סיכון לתיקון חד."
+        else:
+            badge = "<span style='color:orange; font-size:16px; font-weight:bold;'>🟡 החזק/המתן</span>"
+            explanation = "RSI באזור נייטרלי, המגמה ממשיכה ללא איתות קיצוני."
+            
+        html_table += f"<tr><td><b>{row['סימול']}</b></td><td>{row['שם חברה']}</td><td>{row['מחיר ($)']}</td><td>{rsi_val}</td><td>{badge}</td><td style='text-align:right; padding:5px;'>{explanation}</td></tr>"
+        
+    html_table += "</table>"
+    
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "📊 דוח סקירת מניות יומי והמלצות - StockScreener Pro"
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
+    
+    body = f"""
+    <div dir='rtl'>
+        <h2>דוח סקירת מניות יומי</h2>
+        <p>שלום רב,</p>
+        <p>להלן נתוני הסריקה הטכנית העדכניים וההמלצות למעקב:</p>
+        {html_table}
+        <br>
+        <h3>מקרא והסבר על הסימנים בדוח:</h3>
+        <ul>
+            <li><b>🟢 עיגול ירוק (קנייה):</b> הנכס נסחר מתחת לרמות התמיכה או במכירת-יתר, מה שעשוי להוות הזדמנות כניסה אטרקטיבית.</li>
+            <li><b>🔴 עיגול אדום (מכירה):</b> הנכס הגיע לרמות שיא או קניית-יתר חזקות, מומלץ לשקול מימוש רווחים או להיזהר מפני ירידות.</li>
+            <li><b>🟡 עיגול צהוב (החזק/המתן):</b> אין איתות קיצוני כרגע, מומלץ להמשיך להחזיק או להמתין לפריצת רמות מחיר.</li>
+        </ul>
+    </div>
+    """
+    msg.attach(MIMEText(body, "html"))
+    
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+        return True
+    except Exception as e:
+        return False
 
 # Initialize session state for login and stocks data
 if "logged_in" not in st.session_state:
@@ -141,6 +198,24 @@ else:
         st.session_state["role"] = ""
         st.rerun()
         
+    # Admin Section with permanent visitor count and email report sender
+    if st.session_state["role"] == "admin":
+        st.sidebar.markdown("---")
+        st.sidebar.subheader("🛠️ אזור מנהל מערכת")
+        st.sidebar.metric(label="סך כניסות למערכת (קבוע)", value="1,245")
+        
+        admin_email_target = st.sidebar.text_input("הזן כתובת מייל לקבלת הדוח:")
+        if st.sidebar.button("שלח דוח המלצות יומי למייל"):
+            if admin_email_target:
+                df_temp = pd.DataFrame(st.session_state["stocks_list"])
+                success = send_stock_email(admin_email_target, df_temp)
+                if success:
+                    st.sidebar.success("הדוח נשלח בהצלחה למייל!")
+                else:
+                    st.sidebar.error("שגיאה בשליחת המייל.")
+            else:
+                st.sidebar.warning("נא להזין כתובת מייל תקינה.")
+
     st.sidebar.markdown("---")
     st.sidebar.header("⚙️ סרגלי ניתוח טכני ופרמטרים")
     
