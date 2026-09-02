@@ -3,10 +3,38 @@ import pandas as pd
 import datetime
 from streamlit_gsheets import GSheetsConnection
 
-# הגדרת מאפייני עמוד
-st.set_page_config(page_title="StockScreener Pro - SR", page_icon="📈", layout="wide")
+st.set_page_config(page_title="StockScreener Pro - RS", page_icon="📈", layout="wide")
 
-# חיבור ל-Google Sheets באמצעות GSheetsConnection
+# עיצוב מותאם אישית: צבעי כתום ולוגו RS
+st.markdown("""
+    <style>
+    .stButton>button {
+        background-color: #ff6600;
+        color: white;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+    .stButton>button:hover {
+        background-color: #e65c00;
+        color: white;
+    }
+    .login-card {
+        background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+        padding: 30px;
+        border-radius: 15px;
+        border: 2px solid #ffb74d;
+        box-shadow: 0 4px 15px rgba(255, 102, 0, 0.15);
+    }
+    .rs-logo {
+        font-size: 40px;
+        font-weight: bold;
+        color: #ff6600;
+        text-align: center;
+        margin-bottom: 5px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 @st.cache_resource
 def get_gsheets_connection():
     return st.connection("gsheets", type=GSheetsConnection)
@@ -17,74 +45,68 @@ except Exception as e:
     st.error(f"שגיאה בחיבור ל-Google Sheets: {e}")
     st.stop()
 
-# אתחול משתני Session State ומונה כניסות שלא מתאפס בריצות חוזרות
+# אתחול משתני Session State ומונה כניסות יציב
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
 if "visitor_count" not in st.session_state:
-    st.session_state.visitor_count = 1250  # ערך התחלתי שניתן לסנכרן מול הגיליון
+    st.session_state.visitor_count = 1250
 if "has_counted" not in st.session_state:
     st.session_state.visitor_count += 1
     st.session_state.has_counted = True
 
-# פונקציית מסך ההתחברות
 def show_login_page():
-    st.title("🔐 StockScreener Pro - התחברות למערכת")
-    
-    col1, col2 = st.columns([1, 2])
-    with col1:
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.markdown('<div class="rs-logo">RS 📈</div>', unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #d84315;'>StockScreener Pro</h2>", unsafe_allow_html=True)
+        
         with st.form("login_form"):
-            user_id_input = st.text_input("הכנס תעודת זהות / מזהה משתמש:")
-            password_input = st.text_input("סיסמה (למנהל בלבד):", type="password")
-            submit_button = st.form_submit_button("התחבר למערכת")
+            user_input = st.text_input("הכנס אימייל / תעודת זהות / מזהה משתמש:")
+            password_input = st.text_input("סיסמה (למנהל בלבד - 999999):", type="password")
+            submit_button = st.form_submit_button("התחבר למערכת", use_container_width=True)
             
             if submit_button:
-                # בדיקת כניסת מנהל (Admin)
-                if user_id_input.strip() == "admin" and password_input.strip() == "1234":
+                # בדיקת כניסת מנהל עם הקוד 999999
+                if user_input.strip() == "admin" and password_input.strip() == "999999":
                     st.session_state.logged_in = True
                     st.session_state.user_id = "admin"
                     st.success("התחברת בהצלחה כמנהל מערכת!")
                     st.rerun()
                 else:
                     try:
-                        # קריאת הנתונים מגיליון גוגל
                         df_db = conn.read(ttl=0)
                         df_db.columns = df_db.columns.str.strip()
                         
-                        # מציאת עמודת מזהה המשתמש בצורה חסינה לרווחים ואותיות
-                        id_cols = [col for col in df_db.columns if col.lower() == 'user_id']
+                        id_cols = [col for col in df_db.columns if col.lower() in ['user_id', 'email', 'מייל', 'תז']]
                         if not id_cols:
-                            st.error("שגיאה במבנה הגיליון: לא נמצאה עמודת User_ID.")
+                            st.error("שגיאה במבנה הגיליון: לא נמצאה עמודת זיהוי או מייל.")
                             return
                         
                         id_col = id_cols[0]
-                        df_db[id_col] = df_db[id_col].astype(str).str.strip()
-                        user_id_clean = str(user_id_input).strip()
+                        df_db[id_col] = df_db[id_col].astype(str).str.strip().str.lower()
+                        user_input_clean = str(user_input).strip().lower()
                         
-                        user_row = df_db[df_db[id_col] == user_id_clean]
+                        user_row = df_db[df_db[id_col] == user_input_clean]
                         
                         if not user_row.empty:
                             st.session_state.logged_in = True
-                            st.session_state.user_id = user_id_clean
+                            st.session_state.user_id = user_input.strip()
                             st.success("התחברת בהצלחה!")
                             st.rerun()
                         else:
-                            st.error("מזהה משתמש לא נמצא בגיליון. פנה למנהל המערכת לצורך רישום.")
+                            st.error("מזהה משתמש או אימייל לא נמצאו בגיליון. פנה למנהל המערכת.")
                     except Exception as e:
                         st.error(f"שגיאה בהתחברות מול הגיליון: {e}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# הצגת מסך ההתחברות אם המשתמש אינו מחובר
 if not st.session_state.logged_in:
     show_login_page()
 else:
-    # **האפליקציה הראשית לאחר התחברות מוצלחת**
-    
-    # סרגל צד (Sidebar) להגדרות, מונה כניסות וניהול סשן
     st.sidebar.title("⚙️ הגדרות סורק ואיתותים")
     st.sidebar.write(f"מחובר כ: **{st.session_state.user_id}**")
-    
-    # הצגת מונה הכניסות בסרגל הצד (יציב ולא מתאפס בריצה שוטפת)
     st.sidebar.metric("👥 סה״כ כניסות למערכת", st.session_state.visitor_count)
     
     if st.sidebar.button("🚪 התנתק"):
@@ -93,17 +115,13 @@ else:
         st.rerun()
         
     st.sidebar.markdown("---")
-    
-    # מסנני חיפוש ורגישות טכנית
     selected_signal = st.sidebar.selectbox("סינון לפי איתות טכני:", ["הכל", "Buy 🟢", "Sell 🔴"])
     rsi_buy = st.sidebar.slider("סף RSI לקנייה", 0, 100, 45)
     rsi_sell = st.sidebar.slider("סף RSI למכירה", 0, 100, 60)
     
-    # מסך ראשי מלא
-    st.title("📈 StockScreener Pro - SR")
+    st.title("📈 StockScreener Pro - RS")
     st.markdown("לוח בקרה מתקדם לניתוח מניות, איתותי קנייה/מכירה, RSI וקישורים ישירים לגרפים.")
     
-    # נתוני המניות לסורק
     data = [
         {"מניה": "AAPL", "איתות טכני": "Sell 🔴", "מחיר סגירה": 325.34, "RSI נוכחי": 73.74, "קישור לגרף": "https://finance.yahoo.com/quote/AAPL"},
         {"מניה": "MSFT", "איתות טכני": "Buy 🟢", "מחיר סגירה": 496.82, "RSI נוכחי": 50.61, "קישור לגרף": "https://finance.yahoo.com/quote/MSFT"},
@@ -114,13 +132,11 @@ else:
     ]
     
     df = pd.DataFrame(data)
-    
     if selected_signal != "הכל":
         filtered_df = df[df["איתות טכני"] == selected_signal]
     else:
         filtered_df = df
     
-    # מדדים מרכזיים ראשוניים (Metrics)
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("סה״כ מניות במעקב", len(df))
@@ -132,8 +148,6 @@ else:
         st.metric("המלצות מכירה (Sell)", sell_count, delta="🔴")
     
     st.divider()
-    
-    # הצגת הטבלה האינטראקטיבית עם קישורים פעילים לגרפים
     st.subheader("📊 טבלת דו\"ח מניות יומי")
     st.dataframe(
         filtered_df,
@@ -146,8 +160,7 @@ else:
         use_container_width=True
     )
     
-    # אזור מידע / אודות
     st.markdown("---")
     with st.expander("ℹ️ מי אנחנו / אודות המערכת"):
-        st.write("מערכת **StockScreener Pro** פותחה כדי לספק כלי ניתוח טכני מהיר, ממוקד ויעיל למשקיעים.")
-        st.write("המערכת משלבת אימות משתמשים מול Google Sheets, מונה כניסות אישי, וניהול איתותי RSI.")
+        st.write("מערכת **StockScreener Pro - RS** פותחה כדי לספק כלי ניתוח טכני מהיר, ממוקד ויעיל למשקיעים.")
+        st.write("המערכת משלבת עיצוב מותאם אישית בצבעי כתום ולוגו RS, אימות משתמשים ואימיילים מול Google Sheets, ומונה כניסות יציב.")
