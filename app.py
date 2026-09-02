@@ -6,13 +6,14 @@ import os
 
 # Page configuration
 st.set_page_config(
-    page_title="StockScreener Pro",
+    page_title="StockScreener Pro - איציק",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 SUBSCRIBERS_FILE = "subscribers.json"
+VISITORS_FILE = "visitors.json"
 
 def load_subscribers():
     if os.path.exists(SUBSCRIBERS_FILE):
@@ -26,6 +27,22 @@ def load_subscribers():
 def save_subscribers(subs):
     with open(SUBSCRIBERS_FILE, "w", encoding="utf-8") as f:
         json.dump(subs, f, ensure_ascii=False, indent=4)
+
+def get_visitor_count():
+    if os.path.exists(VISITORS_FILE):
+        try:
+            with open(VISITORS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("count", 1245)
+        except:
+            return 1245
+    return 1245
+
+def increment_visitor_count():
+    count = get_visitor_count() + 1
+    with open(VISITORS_FILE, "w", encoding="utf-8") as f:
+        json.dump({"count": count}, f, ensure_ascii=False)
+    return count
 
 # Custom CSS styling
 st.markdown("""
@@ -60,6 +77,12 @@ if "role" not in st.session_state:
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
 
+if "visited" not in st.session_state:
+    st.session_state["visited"] = True
+    current_visitors = increment_visitor_count()
+else:
+    current_visitors = get_visitor_count()
+
 if "stocks_list" not in st.session_state:
     st.session_state["stocks_list"] = [
         {"סימול": "AAPL", "שם חברה": "Apple Inc.", "מחיר ($)": 189.50, "RSI": 45.2, "מגמת SMA": "חיובית", "שינוי יומי (%)": "+1.2%", "המלצה": "קנייה"},
@@ -77,7 +100,7 @@ if not st.session_state["logged_in"]:
         <div style="text-align: center; margin-top: 20px;">
             <div style="display: inline-block; background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(230,81,0,0.3); color: white; width: 140px; height: 140px;">
                 <div style="font-size: 38px; font-weight: bold; letter-spacing: 2px;">SR</div>
-                <div style="font-size: 20px; margin-top: 5px; font-weight: 600;">שר</div>
+                <div style="font-size: 20px; margin-top: 5px; font-weight: 600;">איציק</div>
             </div>
             <h3 style="margin-top: 15px; color: #334155; font-size: 1.1rem;">השקעה הבאה שלך | YOUR NEXT INVESTMENT 📊</h3>
         </div>
@@ -193,6 +216,10 @@ else:
             })
             st.sidebar.success(f"המניה {new_symbol.upper()} נוספה בהצלחה!")
 
+    # Persistent visitor count display in sidebar
+    st.sidebar.markdown("---")
+    st.sidebar.metric(label="סך כניסות למערכת (קבוע)", value=f"{current_visitors:,}")
+
     st.sidebar.markdown("---")
     if st.sidebar.button("התנתק"):
         st.session_state["logged_in"] = False
@@ -209,7 +236,7 @@ else:
     
     st.dataframe(
         df,
-        width='stretch',
+        use_container_width=True,
         column_config={
             "קישור לגרף": st.column_config.LinkColumn("צפה בגרף חיצוני (Yahoo Finance)", display_text="פתח גרף 📈")
         }
