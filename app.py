@@ -1,16 +1,21 @@
 import streamlit as st
 import pandas as pd
 import datetime
+from streamlit_gsheets import GSheetsConnection
 
 # הגדרת מאפייני עמוד
 st.set_page_config(page_title="StockScreener Pro - SR", page_icon="📈", layout="wide")
 
-# חיבור ל-Google Sheets באמצעות ה-Secrets
+# חיבור ל-Google Sheets באמצעות GSheetsConnection
 @st.cache_resource
 def get_gsheets_connection():
-    return st.connection("gsheets", type="gsheets")
+    return st.connection("gsheets", type=GSheetsConnection)
 
-conn = get_gsheets_connection()
+try:
+    conn = get_gsheets_connection()
+except Exception as e:
+    st.error(f"שגיאה בחיבור ל-Google Sheets: {e}")
+    st.stop()
 
 # אתחול משתני Session State
 if "logged_in" not in st.session_state:
@@ -95,7 +100,6 @@ else:
     
     tickers = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
     
-    # טבלת תצוגה לדוגמה (ניתן לשלב כאן את הלוגיקה המקורית של שליפת הנתונים והטכניאלים)
     sample_data = []
     for ticker in tickers:
         sample_data.append({
@@ -108,7 +112,7 @@ else:
     df_results = pd.DataFrame(sample_data)
     st.dataframe(df_results, use_container_width=True)
     
-    # אזור מידע / אודות (מי אנחנו)
+    # אזור מידע / אודות
     st.markdown("---")
     with st.expander("ℹ️ מי אנחנו / אודות המערכת"):
         st.write("מערכת **StockScreener Pro** פותחה כדי לספק כלי ניתוח טכני מהיר, ממוקד ויעיל למשקיעים.")
