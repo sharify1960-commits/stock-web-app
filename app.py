@@ -169,6 +169,10 @@ st.markdown("""
 if 'users_db' not in st.session_state:
     st.session_state.users_db = {}
 
+# מונה כניסות למערכת
+if 'total_logins' not in st.session_state:
+    st.session_state.total_logins = 0
+
 # רשימת תעודות זהות פטורות מתשלום כולל התוספת החדשה
 if 'exempt_users' not in st.session_state:
     st.session_state.exempt_users = {
@@ -274,6 +278,7 @@ if not st.session_state.logged_in:
                         st.session_state.logged_in = True
                         st.session_state.current_user = user_id
                         st.session_state.is_admin = False
+                        st.session_state.total_logins += 1
                         if user_email:
                             if user_id not in st.session_state.users_db:
                                 st.session_state.users_db[user_id] = {"join_date": today.strftime("%Y-%m-%d"), "last_payment_date": None}
@@ -299,6 +304,7 @@ if not st.session_state.logged_in:
                             st.session_state.logged_in = True
                             st.session_state.current_user = user_id
                             st.session_state.is_admin = False
+                            st.session_state.total_logins += 1
                             st.rerun()
                         else:
                             st.markdown(f"""
@@ -318,12 +324,14 @@ if not st.session_state.logged_in:
                         st.session_state.logged_in = True
                         st.session_state.current_user = user_id
                         st.session_state.is_admin = False
+                        st.session_state.total_logins += 1
                         st.success("🎉 נרשמת בהצלחה! הוענק לך חודש ניסיון חינם למערכת.")
                         st.rerun()
 
 # --- אזור ניהול (מנהל בלבד) ---
 elif st.session_state.is_admin:
     st.markdown("<h1>🛠️ פאנל ניהול מנויים ופטורים (משפחה)</h1>", unsafe_allow_html=True)
+    st.info(f"📊 מונה כניסות למערכת: {st.session_state.total_logins} כניסות משתמשים בוצעו עד כה.")
     st.write("כאן תוכל לעדכן את מחיר המנוי, לערוך את הודעות התשלום, לנהל משתמשים, ולהגדיר בני משפחה או חברים שיהיו פטורים מתשלום לצמיתות.")
     
     if st.button("🚪 התנתק מפאנל מנהל"):
