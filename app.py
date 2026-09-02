@@ -3,8 +3,9 @@ import yfinance as yf
 import pandas as pd
 import io
 from datetime import datetime, timedelta
+from streamlit_gsheets import GSheetsConnection
 
-# הגדרת עיצוב הדף ופריסה רחבה
+# הגדרת עיצוב הדף
 st.set_page_config(
     page_title="StockScreener Pro - SR", 
     page_icon="📈", 
@@ -12,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# עיצוב CSS מותאם אישית עם גוונים כתומים מטאליים יוקרתיים
+# עיצוב CSS מותאם אישית
 st.markdown("""
     <style>
     .stApp {
@@ -22,14 +23,8 @@ st.markdown("""
         background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 50%, #FED7AA 100%);
         background-attachment: fixed;
     }
-    h1, h2, h3 {
-        text-align: center;
-        color: #85330a;
-    }
-    p, label, .stMarkdown {
-        text-align: right;
-        color: #431407;
-    }
+    h1, h2, h3 { text-align: center; color: #85330a; }
+    p, label, .stMarkdown { text-align: right; color: #431407; }
     .stButton>button {
         width: 100%;
         border-radius: 12px;
@@ -38,19 +33,9 @@ st.markdown("""
         color: white;
         border: 1px solid #ffd1a4;
         padding: 0.7rem 1rem;
-        box-shadow: 0 4px 15px rgba(214, 77, 0, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.4);
-        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 15px rgba(214, 77, 0, 0.4);
     }
-    .stButton>button:hover {
-        background: linear-gradient(135deg, #ff943b 0%, #e65c00 50%, #b33b00 100%);
-        color: white;
-        border-color: #ffe4c4;
-    }
-    .brand-logo-container {
-        text-align: center;
-        margin-top: 25px;
-        margin-bottom: 30px;
-    }
+    .brand-logo-container { text-align: center; margin-top: 25px; margin-bottom: 30px; }
     .diamond-logo {
         display: inline-flex;
         flex-direction: column;
@@ -61,140 +46,66 @@ st.markdown("""
         background: linear-gradient(135deg, #ff8c1a 0%, #d64d00 50%, #852e00 100%);
         transform: rotate(45deg);
         border-radius: 20px;
-        box-shadow: 0 15px 35px rgba(184, 69, 0, 0.5), inset 0 3px 6px rgba(255, 220, 180, 0.6), inset 0 -4px 8px rgba(80, 20, 0, 0.7);
+        box-shadow: 0 15px 35px rgba(184, 69, 0, 0.5);
         border: 4px double #ffdbb5;
         margin: 25px auto;
-        position: relative;
     }
-    .diamond-content {
-        transform: rotate(-45deg);
-        text-align: center;
-        color: #FFF7ED;
-        font-family: 'Georgia', Times, serif;
-    }
-    .diamond-title-en {
-        font-size: 2.4rem;
-        font-weight: 900;
-        letter-spacing: 3px;
-        line-height: 1.1;
-        background: linear-gradient(180deg, #ffffff 0%, #ffe0b3 50%, #ffaa66 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        filter: drop-shadow(2px 2px 2px rgba(80, 20, 0, 0.8));
-    }
-    .diamond-title-he {
-        font-size: 1.8rem;
-        font-weight: bold;
-        margin-top: 2px;
-        background: linear-gradient(180deg, #ffffff 0%, #ffdfb8 50%, #ff9944 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        filter: drop-shadow(1.5px 1.5px 2px rgba(80, 20, 0, 0.8));
-    }
-    .brand-subtitle {
-        font-size: 1.05rem;
-        background: linear-gradient(135deg, #993300 0%, #cc5200 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        margin-top: 15px;
-    }
+    .diamond-content { transform: rotate(-45deg); text-align: center; color: #FFF7ED; }
+    .diamond-title-en { font-size: 2.4rem; font-weight: 900; }
+    .diamond-title-he { font-size: 1.8rem; font-weight: bold; }
+    .brand-subtitle { font-size: 1.05rem; color: #993300; font-weight: 800; text-transform: uppercase; margin-top: 15px; }
     .login-card {
         background: linear-gradient(145deg, #ffe5cc 0%, #ffd1a4 50%, #ffbe80 100%);
         border: 2px solid #e67300;
         padding: 30px;
         border-radius: 20px;
-        box-shadow: 0 15px 35px -5px rgba(204, 82, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.7), inset 0 -3px 6px rgba(180, 70, 0, 0.2);
+        box-shadow: 0 15px 35px -5px rgba(204, 82, 0, 0.3);
         margin-bottom: 20px;
     }
-    .login-card h3 {
-        color: #732600;
-        text-shadow: 0 1px 1px rgba(255,255,255,0.6);
-    }
-    .login-card p {
-        color: #591e00;
-        font-weight: 500;
-    }
-    .market-badge {
-        display: inline-block;
-        background: linear-gradient(135deg, #ff9933 0%, #e65c00 100%);
-        color: #ffffff;
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: bold;
-        border: 1px solid #ffd1a4;
-        box-shadow: 0 4px 8px rgba(214, 77, 0, 0.25);
-        margin-bottom: 10px;
-        text-shadow: 0 1px 1px rgba(0,0,0,0.3);
-    }
     .contract-box {
-        background: linear-gradient(145deg, #fff3e6 0%, #ffe6cc 100%);
+        background: #fff3e6;
         border: 1.5px solid #ff9933;
         padding: 20px;
         border-radius: 12px;
         max-height: 200px;
         overflow-y: scroll;
         margin-bottom: 15px;
-        font-size: 0.9rem;
-        color: #431407;
-        box-shadow: inset 0 2px 4px rgba(255,255,255,0.8);
     }
     .payment-alert {
-        background: linear-gradient(145deg, #ffe6e6 0%, #ffcccc 100%);
+        background: #ffe6e6;
         border: 1.5px solid #e60000;
         padding: 20px;
         border-radius: 12px;
         color: #800000;
         text-align: center;
-        margin-top: 20px;
-        box-shadow: 0 6px 15px rgba(230, 0, 0, 0.15);
-    }
-    .stTextInput>div>div>input {
-        background-color: #fffaf5;
-        border: 1.5px solid #e67300;
-        border-radius: 8px;
-        color: #431407;
-    }
-    .stTextInput>div>div>input:focus {
-        border-color: #993300;
-        box-shadow: 0 0 8px rgba(230, 115, 0, 0.4);
     }
     </style>
 """, unsafe_allow_html=True)
 
-# ניהול בסיס נתונים פנימי לזיכרון המערכת
-if 'users_db' not in st.session_state:
-    st.session_state.users_db = {}
+# חיבור ל-Google Sheets
+conn = st.connection("gsheets", type=GSheetsConnection)
 
-# מונה כניסות למערכת
-if 'total_logins' not in st.session_state:
-    st.session_state.total_logins = 0
+def load_data():
+    try:
+        return conn.read(ttl="0m")
+    except Exception:
+        return pd.DataFrame(columns=['User_ID', 'Join_Date', 'Last_Payment_Date', 'Email', 'Is_Exempt', 'Logins_Count'])
 
-# רשימת תעודות זהות פטורות מתשלום כולל התוספת החדשה
-if 'exempt_users' not in st.session_state:
-    st.session_state.exempt_users = {
-        "056426984", 
-        "058281395", 
-        "301589305", 
-        "322638784", 
-        "315213256", 
-        "204630164",
-        "024675449"
-    }
+def save_data(df):
+    conn.update(data=df)
 
-# מחיר מנוי חודשי דינמי
+# טעינת הנתונים מהגיליון
+df_db = load_data()
+
+# הגדרת משתני מערכת בבסיס הנתונים אם אינם קיימים
 if 'monthly_price' not in st.session_state:
     st.session_state.monthly_price = 75
 
-# נוסח הודעת התשלום הכולל את פרטי בנק יהב ומספר הטלפון
 DEFAULT_PAYMENT_MSG = (
     "💳 איך משלמים?\n"
     "• העברה בנקאית: בנק יהב (04), סניף 120, מספר חשבון 292521.\n"
     "• Bit / PayBox למספר הטלפון 0507634366.\n"
-    "• לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ למספר 0507634366 יחד עם: שם מלא + תעודת זהות (או מספר עוסק מורשה/חברה) לצורך הפקת הקבלה והחשבונית, והמנהל יפתח לך מיד את הגישה לחודש נוסף!"
+    "• לאחר ביצוע התשלום, שלח את צילום האסמכתא בוואטסאפ למספר 0507634366 יחד עם שם מלא ות.ז לקבלת קבלה ופתיחת הגישה!"
 )
 
 if 'payment_message_template' not in st.session_state:
@@ -205,9 +116,43 @@ if 'logged_in' not in st.session_state:
     st.session_state.current_user = None
     st.session_state.is_admin = False
 
-ADMIN_SECRET_CODE = "999999" 
+ADMIN_SECRET_CODE = "999999"
 
-# --- מסך הזדהות וכניסת משתמשים / מנהל מעוצב בכתום מטאלי ---
+# פונקציה לעדכון כניסה ב-Google Sheets
+def register_login(user_id, email=""):
+    global df_db
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    
+    # עדכון מונה כולל
+    total_idx = df_db[df_db['User_ID'] == 'TOTAL_LOGINS'].index
+    if not total_idx.empty:
+        curr_count = int(df_db.loc[total_idx[0], 'Logins_Count']) if pd.notnull(df_db.loc[total_idx[0], 'Logins_Count']) else 0
+        df_db.loc[total_idx[0], 'Logins_Count'] = curr_count + 1
+    else:
+        new_row = pd.DataFrame([{'User_ID': 'TOTAL_LOGINS', 'Join_Date': today_str, 'Last_Payment_Date': '', 'Email': '', 'Is_Exempt': False, 'Logins_Count': 1}])
+        df_db = pd.concat([df_db, new_row], ignore_index=True)
+
+    # עדכון מונה אישי למשתמש
+    user_idx = df_db[df_db['User_ID'] == user_id].index
+    if not user_idx.empty:
+        u_count = int(df_db.loc[user_idx[0], 'Logins_Count']) if pd.notnull(df_db.loc[user_idx[0], 'Logins_Count']) and str(df_db.loc[user_idx[0], 'Logins_Count']).isdigit() else 0
+        df_db.loc[user_idx[0], 'Logins_Count'] = u_count + 1
+        if email:
+            df_db.loc[user_idx[0], 'Email'] = email
+    else:
+        new_user = pd.DataFrame([{
+            'User_ID': user_id, 
+            'Join_Date': today_str, 
+            'Last_Payment_Date': '', 
+            'Email': email, 
+            'Is_Exempt': False, 
+            'Logins_Count': 1
+        }])
+        df_db = pd.concat([df_db, new_user], ignore_index=True)
+        
+    save_data(df_db)
+
+# --- מסך הזדהות ---
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2.2, 1])
     with col2:
@@ -223,27 +168,16 @@ if not st.session_state.logged_in:
             </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("<div style='text-align: center;'><span class='market-badge'>⚡ פלטפורמת מסחר וניתוחים טכניים מתקדמים</span></div>", unsafe_allow_html=True)
         st.markdown("<h1>StockScreener Pro</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #7c2d12; font-size: 1.05rem;'>מערכת חכמה לאיתור מניות מובילות, ניתוח RSI וייצור דוחות אקסל וגרפים ויזואליים בקליק אחד.</p>", unsafe_allow_html=True)
         
         st.markdown("<div class='login-card'>", unsafe_allow_html=True)
         st.subheader("🔐 התחברות או הרשמה למערכת")
-        st.markdown(
-            "<p><b>הנחיות כניסה:</b><br>"
-            "• בשדה תעודת הזהות: הכנס תעודת זהות בת <b>9 ספרות בדיוק</b>.<br>"
-            "• בשדה הסיסמה: הכנס בדיוק את <b>6 הספרות האחרונות</b> של מספר תעודת הזהות שלך.</p>"
-        , unsafe_allow_html=True)
         
         user_id = st.text_input("מספר תעודת זהות (9 ספרות / קוד מנהל):").strip()
         user_password = st.text_input("סיסמה (6 ספרות אחרונות של ת.ז / סיסמת מנהל):", type="password").strip()
+        user_email = st.text_input("כתובת אימייל לקבלת דו״ח מניות יומי (אופציונלי):").strip()
         
-        # שדה להזנת מייל עבור משתמשים חדשים שרוצים עדכונים יומיים אוטומטיים
-        user_email = st.text_input("כתובת אימייל לקבלת דו״ח מניות יומי אוטומטי (אופציונלי):").strip()
-        
-        is_admin_attempt = (user_id == "ADMIN" and user_password == ADMIN_SECRET_CODE)
-        
-        if is_admin_attempt:
+        if user_id == "ADMIN" and user_password == ADMIN_SECRET_CODE:
             if st.button("התחבר כמנהל מערכת 🛠️"):
                 st.session_state.logged_in = True
                 st.session_state.current_user = "ADMIN"
@@ -252,87 +186,73 @@ if not st.session_state.logged_in:
         
         st.markdown("</div>", unsafe_allow_html=True)
         
-        st.markdown("### 📄 תנאי שימוש והסרת אחריות משפטית")
-        st.markdown(f"""
-        <div class="contract-box">
-            <b>1. היעדר ייעוץ השקעות:</b> המערכת מספקת נתונים טכניים, חישובים וכלים סטטיסטיים בלבד ואינה מהווה בשום אופן ייעוץ השקעות, שיווק השקעות או הצעה לקנייה/מכירה של ניירות ערך.<br><br>
-            <b>2. אחריות המשתמש:</b> השימוש במידע שמופק במערכת נעשה על אחריותו הבלעדית והמלאה של המשתמש. מפתח המערכת ו/או מפעיליה לא יישאו באחריות כלשהי לכל הפסד, נזק פיננסי או תוצאה ישירה/עקיפה שנגרמו כתוצאה מהסתמכות על הנתונים.<br><br>
-            <b>3. תשלום ומנוי חודשי:</b> הלקוח זכאי לחודש ניסיון ראשון חינם. לאחר מכן, דמי השימוש החודשיים במערכת הינם <b>{st.session_state.monthly_price} ש"ח כולל מע"מ</b> לחודש. התשלום מתחדש מדי חודש, ואי-הסדרת תשלום במועד תגרור חסימת גישה זמנית עד לחידושו.
-        </div>
-        """, unsafe_allow_html=True)
-        
-        agreed = st.checkbox("אני מאשר/ת שקראתי את תנאי השימוש, הסרת האחריות ומדיניות התשלום ואני מסכים/ה להם.")
+        agreed = st.checkbox("אני מאשר/ת שקראתי את תנאי השימוש ומדיניות התשלום.")
         
         if st.button("התחבר / הירשם למערכת 🚀"):
             if not agreed:
-                st.error("❌ עליך לאשר את תנאי השימוש וכתב הסרת האחריות לפני ההתחברות.")
+                st.error("❌ עליך לאשר את תנאי השימוש לפני ההתחברות.")
             elif user_id != "ADMIN":
                 if not user_id.isdigit() or len(user_id) != 9:
-                    st.error("❌ מספר תעודת הזהות חייב להכיל בדיוק 9 ספרות.")
+                    st.error("❌ תעודת הזהות חייבת להכיל 9 ספרות בדיוק.")
                 elif user_password != user_id[-6:]:
-                    st.error("❌ הסיסמה שגויה. עליך להזין בדיוק את 6 הספרות האחרונות של מספר תעודת הזהות.")
+                    st.error("❌ הסיסמה שגויה. עליך להזין את 6 הספרות האחרונות של ת.ז.")
                 else:
                     today = datetime.now().date()
+                    user_rows = df_db[df_db['User_ID'] == user_id]
                     
-                    if user_id in st.session_state.exempt_users:
+                    is_exempt = False
+                    if not user_rows.empty:
+                        is_exempt = str(user_rows.iloc[0]['Is_Exempt']).upper() == 'TRUE'
+                    
+                    if is_exempt:
+                        register_login(user_id, user_email)
                         st.session_state.logged_in = True
                         st.session_state.current_user = user_id
                         st.session_state.is_admin = False
-                        st.session_state.total_logins += 1
-                        if user_email:
-                            if user_id not in st.session_state.users_db:
-                                st.session_state.users_db[user_id] = {"join_date": today.strftime("%Y-%m-%d"), "last_payment_date": None}
-                            st.session_state.users_db[user_id]["email"] = user_email
                         st.rerun()
                     
-                    if user_id in st.session_state.users_db:
-                        user_data = st.session_state.users_db[user_id]
-                        if user_email:
-                            user_data["email"] = user_email
-                            
-                        join_date = datetime.strptime(user_data["join_date"], "%Y-%m-%d").date()
+                    if not user_rows.empty:
+                        join_date_str = str(user_rows.iloc[0]['Join_Date'])
+                        last_pay_str = str(user_rows.iloc[0]['Last_Payment_Date'])
                         
-                        in_first_trial = (today - join_date).days <= 30
+                        join_dt = datetime.strptime(join_date_str, "%Y-%m-%d").date() if join_date_str else today
+                        in_trial = (today - join_dt).days <= 30
                         
-                        is_cycle_paid = False
-                        if user_data.get("last_payment_date"):
-                            last_pay = datetime.strptime(user_data["last_payment_date"], "%Y-%m-%d").date()
-                            if (today - last_pay).days <= 30:
-                                is_cycle_paid = True
+                        paid = False
+                        if last_pay_str and last_pay_str != 'nan' and last_pay_str != 'None':
+                            last_p_dt = datetime.strptime(last_pay_str, "%Y-%m-%d").date()
+                            paid = (today - last_p_dt).days <= 30
                         
-                        if in_first_trial or is_cycle_paid:
+                        if in_trial or paid:
+                            register_login(user_id, user_email)
                             st.session_state.logged_in = True
                             st.session_state.current_user = user_id
                             st.session_state.is_admin = False
-                            st.session_state.total_logins += 1
                             st.rerun()
                         else:
                             st.markdown(f"""
                             <div class="payment-alert">
-                                <h3>⏳ תקופת הניסיון או מחזור החודש הנוכחי הסתיימו!</h3>
-                                <p>כדי להמשיך להשתמש במערכת ללא הפרעה, עליך להסדיר את התשלום החודשי בסך <b>{st.session_state.monthly_price} ש"ח כולל מע"מ</b>.</p>
-                                <hr style="border-color: #ff9999;">
-                                <p style="text-align: right; margin: 0; white-space: pre-line;">{st.session_state.payment_message_template}</p>
+                                <h3>⏳ תקופת הניסיון או המנוי הסתיימו</h3>
+                                <p>להסדרת המנוי בסך <b>{st.session_state.monthly_price} ש"ח</b>:</p>
+                                <p style="white-space: pre-line;">{st.session_state.payment_message_template}</p>
                             </div>
                             """, unsafe_allow_html=True)
                     else:
-                        st.session_state.users_db[user_id] = {
-                            "join_date": today.strftime("%Y-%m-%d"),
-                            "last_payment_date": None,
-                            "email": user_email
-                        }
+                        register_login(user_id, user_email)
                         st.session_state.logged_in = True
                         st.session_state.current_user = user_id
                         st.session_state.is_admin = False
-                        st.session_state.total_logins += 1
-                        st.success("🎉 נרשמת בהצלחה! הוענק לך חודש ניסיון חינם למערכת.")
+                        st.success("🎉 נרשמת בהצלחה! הוענק לך חודש ניסיון חינם.")
                         st.rerun()
 
-# --- אזור ניהול (מנהל בלבד) ---
+# --- פאנל ניהול (מנהל בלבד) ---
 elif st.session_state.is_admin:
-    st.markdown("<h1>🛠️ פאנל ניהול מנויים ופטורים (משפחה)</h1>", unsafe_allow_html=True)
-    st.info(f"📊 מונה כניסות למערכת: {st.session_state.total_logins} כניסות משתמשים בוצעו עד כה.")
-    st.write("כאן תוכל לעדכן את מחיר המנוי, לערוך את הודעות התשלום, לנהל משתמשים, ולהגדיר בני משפחה או חברים שיהיו פטורים מתשלום לצמיתות.")
+    st.markdown("<h1>🛠️ פאנל ניהול (קשר ישיר ל-Google Sheets)</h1>", unsafe_allow_html=True)
+    
+    total_logins_row = df_db[df_db['User_ID'] == 'TOTAL_LOGINS']
+    total_count = total_logins_row.iloc[0]['Logins_Count'] if not total_logins_row.empty else 0
+    
+    st.info(f"📊 סך כניסות כללי שנרשמו ב-Google Sheets: **{total_count}** כניסות.")
     
     if st.button("🚪 התנתק מפאנל מנהל"):
         st.session_state.logged_in = False
@@ -341,225 +261,59 @@ elif st.session_state.is_admin:
         st.rerun()
         
     st.markdown("---")
+    st.subheader("📋 רשימת משתמשים ומונה כניסות אישי")
+    
+    users_display = df_db[df_db['User_ID'] != 'TOTAL_LOGINS']
+    st.dataframe(users_display, use_container_width=True)
+    
+    st.markdown("---")
+    st.subheader("✍️ עדכון תשלומים ופטורים")
+    target_uid = st.text_input("הכנס תעודת זהות (9 ספרות):").strip()
     
     col_a, col_b = st.columns(2)
     with col_a:
-        st.subheader("⚙️ הגדרת מחיר מנוי חודשי")
-        new_price = st.number_input("עדכן מחיר מנוי חודשי (ש״ח כולל מע״מ):", min_value=0, value=st.session_state.monthly_price, step=5)
-        if st.button("💾 שמור מחיר חדש"):
-            st.session_state.monthly_price = new_price
-            st.success(f"✅ המחיר החודשי עודכן בהצלחה ל-{new_price} ש״ח!")
-
+        if st.button("✅ אישור תשלום חודשי"):
+            idx = df_db[df_db['User_ID'] == target_uid].index
+            if not idx.empty:
+                df_db.loc[idx[0], 'Last_Payment_Date'] = datetime.now().strftime("%Y-%m-%d")
+                save_data(df_db)
+                st.success(f"התשלום חודש בהצלחה עבור ת.ז {target_uid}!")
+            else:
+                st.error("ת.ז לא נמצאה בגיליון.")
     with col_b:
-        st.subheader("👨‍👩‍👧 הוספת פטור מתשלום (משפחה)")
-        exempt_input = st.text_input("הכנס תעודת זהות של בן משפחה (9 ספרות):").strip()
-        if st.button("➕ הוסף לרשימת הפטורים מתשלום"):
-            if exempt_input.isdigit() and len(exempt_input) == 9:
-                st.session_state.exempt_users.add(exempt_input)
-                st.success(f"✅ ת.ז {exempt_input} הוגדרה כפטורה מתשלום לצמיתות!")
+        if st.button("🌟 הגדר / בטל פטור מתשלום"):
+            idx = df_db[df_db['User_ID'] == target_uid].index
+            if not idx.empty:
+                curr_status = str(df_db.loc[idx[0], 'Is_Exempt']).upper() == 'TRUE'
+                df_db.loc[idx[0], 'Is_Exempt'] = not curr_status
+                save_data(df_db)
+                st.success(f"סטטוס פטור עודכן ל-{not curr_status} עבור ת.ז {target_uid}!")
             else:
-                st.error("❌ נא להזין מספר תעודת זהות תקין בן 9 ספרות.")
+                st.error("ת.ז לא נמצאה בגיליון.")
 
-    st.markdown("---")
-    st.subheader("✏️ עריכת נוסח הודעת תשלום למשתמש שפג תוקפו")
-    edited_msg = st.text_area("ערוך כאן את נוסח הודעת התשלום והקבלה שתוצג למשתמשים (כולל פרטי בנק וטלפון):", value=st.session_state.payment_message_template, height=160)
-    if st.button("💾 שמור נוסח הודעה חדש"):
-        st.session_state.payment_message_template = edited_msg
-        st.success("✅ נוסח הודעת התשלום עודכן בהצלחה!")
-
-    st.markdown("---")
-    st.subheader("📋 רשימת משתמשים רשומים במערכת ומיילים לעדכון")
-    
-    if len(st.session_state.users_db) == 0 and len(st.session_state.exempt_users) == 0:
-        st.info("ℹ️ עדיין אין משתמשים רשומים במערכת.")
-    else:
-        admin_data = []
-        today_date = datetime.now().date()
-        
-        all_uids = set(st.session_state.users_db.keys()).union(st.session_state.exempt_users)
-        
-        for uid in all_uids:
-            is_exempt = uid in st.session_state.exempt_users
-            user_mail = "לא צוין"
-            if not is_exempt and uid in st.session_state.users_db:
-                user_mail = st.session_state.users_db[uid].get("email", "לא צוין")
-            
-            if is_exempt:
-                status_str = "פטור מתשלום 🌟 (משפחה/חברים)"
-                last_p = "לא נדרש (פטור)"
-                join_d = "מוגדר כפטור"
-            else:
-                user_info = st.session_state.users_db[uid]
-                join_d = user_info["join_date"]
-                last_p = user_info.get("last_payment_date")
-                
-                join_dt = datetime.strptime(join_d, "%Y-%m-%d").date()
-                is_active = (today_date - join_dt).days <= 30
-                if last_p:
-                    last_dt = datetime.strptime(last_p, "%Y-%m-%d").date()
-                    if (today_date - last_dt).days <= 30:
-                        is_active = True
-                
-                status_str = "פעיל 🟢 (בניסיון או שילם)" if is_active else "דרוש תשלום חודשי 🔴 (פג תוקף)"
-            
-            admin_data.append({
-                "תעודת זהות": uid, 
-                "אימייל לעדכונים": user_mail,
-                "תאריך הרשמה": join_d, 
-                "תשלום אחרון": last_p,
-                "סטטוס": status_str
-            })
-        
-        st.table(pd.DataFrame(admin_data))
-        
-        st.markdown("### ✍️ פעולות ניהול מהירות")
-        target_uid = st.text_input("הכנס תעודת זהות לביצוע פעולה (9 ספרות):").strip()
-        
-        col_c, col_d = st.columns(2)
-        with col_c:
-            if st.button("✅ אישור תשלום חודשי רגיל"):
-                if target_uid in st.session_state.users_db:
-                    st.session_state.users_db[target_uid]["last_payment_date"] = datetime.now().date().strftime("%Y-%m-%d")
-                    st.success(f"המנוי עבור ת.ז {target_uid} עודכן לחודש נוסף!")
-                else:
-                    st.error("❌ ת.ז לא נמצאה בבסיס הנתונים הרגיל.")
-        with col_d:
-            if st.button("❌ הסר פטור מתשלום"):
-                if target_uid in st.session_state.exempt_users:
-                    st.session_state.exempt_users.remove(target_uid)
-                    st.success(f"הפטור עבור ת.ז {target_uid} הוסר בהצלחה.")
-                else:
-                    st.error("❌ ת.ז לא נמצאה ברשימת הפטורים.")
-
-# --- האפליקציה הראשית (מוצגת ללקוחות מורשים) ---
+# --- אפליקציה ראשית ---
 else:
-    st.markdown("<h1>📈 StockScreener Pro - SR (שר)</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='color: #85330a; font-size: 1.1rem; font-weight: normal; text-align: center;'>מערכת מתקדמת לניתוח מניות, איתותי מומנטום, דוחות אקסל וגרפים ויזואליים</h3>", unsafe_allow_html=True)
-    
-    if st.sidebar.button("🚪 התנתק מהמערכת"):
+    st.markdown("<h1>📈 StockScreener Pro - SR</h1>", unsafe_allow_html=True)
+    if st.sidebar.button("🚪 התנתק"):
         st.session_state.logged_in = False
         st.session_state.current_user = None
         st.rerun()
 
-    st.markdown("---")
+    tickers_input = st.sidebar.text_input("סימולי מניות", value="AAPL, MSFT, GOOGL, NVDA")
+    rsi_buy_threshold = st.sidebar.slider("רף RSI לקנייה", 30, 55, 45)
+    rsi_sell_threshold = st.sidebar.slider("רף RSI למכירה", 50, 75, 60)
 
-    st.sidebar.header("⚙️ הגדרות ניתוח וסיכון")
-    
-    # הוספת מקטע הסבר נפתח למשתמשים שאינם בקיאים
-    with st.sidebar.expander("📖 מדריך מהיר לפרמטרים ולרמות RSI"):
-        st.markdown("""
-        **מה זה RSI ומדוע הוא חשוב?**
-        מדד RSI (Relative Strength Index) בודק את עוצמת המסחר במניה בסקלה של 0 עד 100 כדי לזהות מתי מניה נסחרת ב"יתר-קנייה" או "יתר-מכירה".
-        
-        * **רף RSI לקנייה (ברירת מחדל: 45):** 
-          מגדיר את הגבול התחתון. ככל שהמספר נמוך יותר (למשל סביב 30-40), פירוש הדבר שהמניה ירדה משמעותית ויכולה להוות הזדמנות קנייה פוטנציאלית (מכירת-יתר).
-        * **רף RSI למכירה (ברירת מחדל: 60):** 
-          מגדיר את הגבול העליון. ככל שהמספר גבוה יותר (למשל סביב 60-70 ומעלה), המניה עלתה חזק וייתכן שהיא יקרה מדי, מה שמאותת על אפשרות למימוש רווחים (קניית-יתר).
-        * **סימולי מניות:** 
-          הזן רשימת סימולים באנגלית מופרדים בפסיקים (לדוגמה: `AAPL, MSFT, TSLA`) כדי שהמערכת תסרוק את כולם יחד בלחיצת כפתור אחת.
-        """)
-
-    tickers_input = st.sidebar.text_input(
-        "הזן סימולי מניות (מופרדים בפסיקים)", 
-        value="AAPL, MSFT, GOOGL, AMZN, NVDA, META"
-    )
-
-    rsi_buy_threshold = st.sidebar.slider("רף RSI לקנייה", min_value=30, max_value=55, value=45)
-    rsi_sell_threshold = st.sidebar.slider("רף RSI למכירה", min_value=50, max_value=75, value=60)
-
-    st.sidebar.markdown("---")
-    run_scan = st.sidebar.button("🚀 הפק דו״ח וגרפים עכשיו")
-
-    if run_scan:
+    if st.sidebar.button("🚀 הפק דו״ח וגרפים"):
         tickers = [t.strip().upper() for t in tickers_input.split(",") if t.strip()]
-        
-        if not tickers:
-            st.warning("⚠️ אנא הזן לפחות סימול מניה אחד תקין.")
-        else:
-            with st.spinner(f"🔍 מבצע סריקה ויזואלית עבור {len(tickers)} מניות... אנא המתן"):
-                results = []
-                chart_data_dict = {}
-                progress_bar = st.progress(0)
-                total = len(tickers)
-
-                for i, ticker in enumerate(tickers):
-                    try:
-                        stock = yf.Ticker(ticker)
-                        data = stock.history(period='6mo')
-                        
-                        if data.empty or len(data) < 20:
-                            continue
-
-                        close_prices = data['Close']
-                        chart_data_dict[ticker] = close_prices
-                        
-                        current_price = float(close_prices.iloc[-1])
-                        daily_return = ((current_price - float(close_prices.iloc[-2])) / float(close_prices.iloc[-2])) * 100 if len(close_prices) >= 2 else 0
-                        weekly_return = ((current_price - float(close_prices.iloc[-5])) / float(close_prices.iloc[-5])) * 100 if len(close_prices) >= 5 else 0
-                        monthly_return = ((current_price - float(close_prices.iloc[-21])) / float(close_prices.iloc[-21])) * 100 if len(close_prices) >= 21 else 0
-
-                        delta = close_prices.diff()
-                        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-                        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-                        rs = gain / loss
-                        data['RSI'] = 100 - (100 / (1 + rs))
-
-                        latest_rsi = float(data['RSI'].iloc[-1]) if not pd.isna(data['RSI'].iloc[-1]) else 50
-                        sma10 = float(close_prices.rolling(window=10).mean().iloc[-1])
-                        sma20 = float(close_prices.rolling(window=20).mean().iloc[-1])
-
-                        signal = 'Hold 🟡'
-                        if sma10 > sma20 and latest_rsi < (rsi_buy_threshold + 20):
-                            signal = 'Buy 🟢'
-                        elif latest_rsi < rsi_buy_threshold: 
-                            signal = 'Buy 🟢'
-                        elif sma10 < sma20 and latest_rsi > (rsi_sell_threshold - 20):
-                            signal = 'Sell 🔴'
-                        elif latest_rsi > rsi_sell_threshold:
-                            signal = 'Sell 🔴'
-
-                        results.append({
-                            'מניה': ticker,
-                            'איתות טכני': signal,
-                            'מחיר נוכחי': round(current_price, 2),
-                            'יומי (%)': round(daily_return, 2),
-                            'שבועי (%)': round(weekly_return, 2),
-                            'חודשי (%)': round(monthly_return, 2),
-                            'RSI נוכחי': round(latest_rsi, 2)
-                        })
-                    except Exception as e:
-                        pass
-                    
-                    progress_bar.progress((i + 1) / total)
-
-            if len(results) > 0:
-                df = pd.DataFrame(results)
-                
-                st.success("✨ הסריקה הושלמה בהצלחה! הנה נתוני המניות והגרפים הויזואליים:")
-                st.dataframe(df, use_container_width=True)
-
-                st.markdown("---")
-                st.markdown("<h2>📈 השוואת גרפי מחירים (6 חודשים אחרונים)</h2>", unsafe_allow_html=True)
-                if chart_data_dict:
-                    df_charts = pd.DataFrame(chart_data_dict)
-                    st.line_chart(df_charts)
-
-                output = io.BytesIO()
-                with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                    df.to_excel(writer, index=False, sheet_name='Stock Report')
-                
-                excel_data = output.getvalue()
-
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.download_button(
-                    label="📥 הורד דו״ח אקסל מלא ומעוצב",
-                    data=excel_data,
-                    file_name="stocks_professional_report.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-            else:
-                st.error("❌ לא נמצאו נתונים עבור המניות שהוזנו.")
-    else:
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.info("👈 בחר את המניות ורמות הסיכון בסרגל הצד משמאל, ולחץ על **'הפק דו״ח וגרפים עכשיו'** כדי לצפות בנתונים וגרפים חזותיים.")
+        results = []
+        for ticker in tickers:
+            try:
+                stock = yf.Ticker(ticker)
+                data = stock.history(period='6mo')
+                if not data.empty:
+                    c_price = float(data['Close'].iloc[-1])
+                    results.append({'מניה': ticker, 'מחיר נוכחי': round(c_price, 2)})
+            except Exception:
+                pass
+        if results:
+            st.dataframe(pd.DataFrame(results), use_container_width=True)
