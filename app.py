@@ -63,7 +63,7 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with maximum emphasis on input field labels and buttons
+# Custom CSS styling with proper RTL alignment for checkboxes and wrapped text
 st.markdown("""
 <style>
     .stApp { 
@@ -107,11 +107,27 @@ st.markdown("""
         background-color: #ffffff !important;
         border: 2px solid #333333 !important;
     }
+    
+    /* Perfect RTL alignment for checkbox text and wrapped lines */
+    .stCheckbox {
+        direction: rtl !important;
+        text-align: right !important;
+    }
+    .stCheckbox label {
+        direction: rtl !important;
+        text-align: right !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        width: 100% !important;
+    }
     .stCheckbox label span {
         font-weight: 900 !important;
         font-size: 1.18rem !important;
         color: #ffffff !important;
         text-shadow: 0 2px 4px rgba(0,0,0,0.7);
+        direction: rtl !important;
+        text-align: right !important;
+        width: 100% !important;
     }
     
     .info-box {
