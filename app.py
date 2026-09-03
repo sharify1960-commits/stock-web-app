@@ -63,11 +63,11 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with slightly softer 90% background and enlarged, bolded elements
+# Custom CSS styling with 75% softer background gradient and enlarged, prominent login button
 st.markdown("""
 <style>
     .stApp { 
-        background: linear-gradient(0deg, #8C3A05 0%, #B24B0D 35%, #D4691B 70%, #EF8E37 100%);
+        background: linear-gradient(0deg, #A7521C 0%, #C8692A 35%, #DF8542 70%, #EFA466 100%);
         background-attachment: fixed;
     }
     .main-header { font-size: 2.6rem; color: #ffffff; text-align: center; font-weight: 800; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
@@ -77,12 +77,12 @@ st.markdown("""
         margin-bottom: 15px; font-size: 1.05rem; font-weight: 700; color: #000000; direction: rtl; text-align: right;
     }
     .stButton>button {
-        width: 100%; border-radius: 12px; font-weight: 900; font-size: 1.45rem;
-        background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%);
-        color: white; border: 2px solid #B23B00; padding: 0.9rem 1rem;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        width: 100%; border-radius: 14px; font-weight: 900; font-size: 1.7rem;
+        background: linear-gradient(135deg, #FF6B00 0%, #D85A00 100%);
+        color: white; border: 3px solid #FFFFFF; padding: 1.1rem 1rem;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
     }
-    .stButton>button:hover { background: linear-gradient(135deg, #E65100 0%, #C43E00 100%); color: white; }
+    .stButton>button:hover { background: linear-gradient(135deg, #D85A00 0%, #B54900 100%); color: white; }
     
     /* Emphasizing and bolding input labels and fields */
     .stTextInput label, .stSelectbox label, .stNumberInput label {
