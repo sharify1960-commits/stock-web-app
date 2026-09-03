@@ -63,7 +63,7 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with proper RTL alignment for checkboxes and wrapped text
+# Custom CSS styling with proper RTL alignment and bold text for all fields and labels
 st.markdown("""
 <style>
     .stApp { 
@@ -90,7 +90,7 @@ st.markdown("""
         color: white !important; 
     }
     
-    /* Maximum emphasis and thickness on all input labels and titles */
+    /* Maximum emphasis, thickness, and right alignment on all input labels and titles */
     .stTextInput label, .stSelectbox label, .stNumberInput label, 
     div[data-baseweb="input"] label, [data-testid="stForm"] label, 
     label[data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p, .st-bp, .st-bq {
@@ -99,6 +99,10 @@ st.markdown("""
         color: #ffffff !important;
         text-shadow: 0 2px 6px rgba(0,0,0,0.95);
         letter-spacing: 0.3px;
+        direction: rtl !important;
+        text-align: right !important;
+        display: block !important;
+        width: 100% !important;
     }
     .stTextInput input {
         font-weight: 800 !important;
@@ -106,6 +110,8 @@ st.markdown("""
         color: #000000 !important;
         background-color: #ffffff !important;
         border: 2px solid #333333 !important;
+        direction: rtl !important;
+        text-align: right !important;
     }
     
     /* Perfect RTL alignment for checkbox text and wrapped lines */
@@ -120,7 +126,7 @@ st.markdown("""
         align-items: flex-start !important;
         width: 100% !important;
     }
-    .stCheckbox label span {
+    .stCheckbox label span, .stCheckbox div[data-testid="stMarkdownContainer"] p {
         font-weight: 900 !important;
         font-size: 1.18rem !important;
         color: #ffffff !important;
