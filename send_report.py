@@ -3,10 +3,12 @@ import smtplib
 import os
 import pandas as pd
 import yfinance as yf
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
 
-# רשימת המניות המלאה בהתאם לגיליון שלך
 tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "AMD", "NFLX", "INTC"]
 
 def get_stock_data():
@@ -20,13 +22,11 @@ def get_stock_data():
             close = hist['Close']
             current_price = close.iloc[-1]
             
-            # חישוב אחוז שינוי (יומי, שבועי, חודשי, שנתי)
             daily_ret = ((close.iloc[-1] - close.iloc[-2]) / close.iloc[-2]) * 100 if len(close) > 1 else 0
             weekly_ret = ((close.iloc[-1] - close.iloc[-5]) / close.iloc[-5]) * 100 if len(close) >= 5 else 0
             monthly_ret = ((close.iloc[-1] - close.iloc[-21]) / close.iloc[-21]) * 100 if len(close) >= 21 else 0
             yearly_ret = ((close.iloc[-1] - close.iloc[0]) / close.iloc[0]) * 100
             
-            # חישוב RSI (14)
             delta = close.diff()
             gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
             loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
@@ -34,7 +34,6 @@ def get_stock_data():
             rsi_series = 100 - (100 / (1 + rs))
             current_rsi = rsi_series.iloc[-1]
             
-            # קביעת איתות וסיבה על בסיס RSI ומומנטום
             if current_rsi > 60:
                 signal = "Sell 🔴"
                 reason = "RSI גבוה מ-60 (אזור רוויה)"
@@ -66,6 +65,55 @@ def get_stock_data():
             
     return pd.DataFrame(data)
 
+def create_excel_report(df):
+    file_path = "stock_report.xlsx"
+    df.to_excel(file_path, index=False, sheet_name="Stock Report")
+    
+    wb = openpyxl.load_workbook(file_path)
+    ws = wb.active
+    ws.views.sheetView[0].rightToLeft = True
+    
+    header_fill = PatternFill(start_color="2980B9", end_color="2980B9", fill_type="solid")
+    header_font = Font(name="Arial", size=11, bold=True, color="FFFFFF")
+    regular_font = Font(name="Arial", size=10)
+    link_font = Font(name="Arial", size=10, color="0000FF", underline="single")
+    align_center = Alignment(horizontal="center", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin', color='DDDDDD'),
+        right=Side(style='thin', color='DDDDDD'),
+        top=Side(style='thin', color='DDDDDD'),
+        bottom=Side(style='thin', color='DDDDDD')
+    )
+    
+    for col in range(1, len(df.columns) + 1):
+        cell = ws.cell(row=1, column=col)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = align_center
+        cell.border = thin_border
+        
+    for row in range(2, len(df) + 2):
+        for col in range(1, len(df.columns) + 1):
+            cell = ws.cell(row=row, column=col)
+            cell.font = regular_font
+            cell.alignment = align_center
+            cell.border = thin_border
+            
+            # הוספת קישור פעיל לגרף ב-Yahoo Finance בעמודת המניה
+            if col == 1:
+                ticker_val = cell.value
+                cell.hyperlink = f"https://finance.yahoo.com/quote/{ticker_val}"
+                cell.font = link_font
+                
+    # התאמת רוחב עמודות אוטומטית
+    for col in ws.columns:
+        max_len = max(len(str(cell.value or '')) for cell in col)
+        col_letter = openpyxl.utils.get_column_letter(col[0].column)
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 14)
+        
+    wb.save(file_path)
+    return file_path
+
 def send_reports():
     sender_email = os.environ.get("MAIL_USERNAME")
     sender_password = os.environ.get("MAIL_PASSWORD")
@@ -87,31 +135,28 @@ def send_reports():
 
     df = get_stock_data()
     if df.empty:
-        html_table = "<p>לא נמצאו נתונים להצגה היום.</p>"
-    else:
-        html_table = df.to_html(index=False, classes='stock-table', border=0)
+        print("No stock data collected.")
+        return
 
-    html_content = f"""
+    excel_file = create_excel_report(df)
+
+    html_content = """
     <!DOCTYPE html>
     <html dir="rtl" lang="he">
     <head>
         <meta charset="UTF-8">
         <style>
-            body {{ font-family: Arial, sans-serif; direction: rtl; text-align: right; background-color: #f4f6f9; padding: 20px; }}
-            .container {{ background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 1000px; margin: auto; }}
-            h2 {{ color: #2c3e50; text-align: center; }}
-            table.stock-table {{ width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }}
-            table.stock-table th, table.stock-table td {{ padding: 10px; border-bottom: 1px solid #ddd; text-align: center; }}
-            table.stock-table th {{ background-color: #2980b9; color: white; }}
-            table.stock-table tr:hover {{ background-color: #f1f1f1; }}
+            body { font-family: Arial, sans-serif; direction: rtl; text-align: right; background-color: #f4f6f9; padding: 20px; }
+            .container { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+            h2 { color: #2c3e50; text-align: center; }
         </style>
     </head>
     <body>
         <div class="container">
-            <h2>📊 דוח מניות יומי מלא - פרוייקט מניות איציק</h2>
+            <h2>📊 דוח מניות יומי - פרוייקט מניות איציק</h2>
             <p>שלום רב,</p>
-            <p>להלן סיכום הנתונים והאיתותים הטכניים המעודכנים להיום:</p>
-            {html_table}
+            <p>מצורף קובץ האקסל המעודכן להיום הכולל את נתוני המניות, האיתותים הטכניים והקישורים הישירים לגרפים ב-Yahoo Finance.</p>
+            <p>ניתן לפתוח את הקובץ בנוחות במחשב ובטלפון הנייד.</p>
             <p style="margin-top: 20px; color: #7f8c8d; font-size: 12px; text-align: center;">הדוח הופק אוטומטית באמצעות מערכת GitHub Actions.</p>
         </div>
     </body>
@@ -121,17 +166,22 @@ def send_reports():
     for email, info in subscribers.items():
         if info.get("active", True):
             try:
-                msg = MIMEMultipart("alternative")
-                msg["Subject"] = "📊 דוח מניות יומי מלא - פרוייקט מניות איציק"
+                msg = MIMEMultipart()
+                msg["Subject"] = "📊 דוח מניות יומי - קובץ אקסל - פרוייקט מניות איציק"
                 msg["From"] = sender_email
                 msg["To"] = email
                 
                 msg.attach(MIMEText(html_content, "html", "utf-8"))
                 
+                with open(excel_file, "rb") as f:
+                    attach = MIMEApplication(f.read(), Name="stock_report.xlsx")
+                    attach['Content-Disposition'] = 'attachment; filename="stock_report.xlsx"'
+                    msg.attach(attach)
+                
                 with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
                     server.login(sender_email, sender_password)
                     server.sendmail(sender_email, email, msg.as_string())
-                print(f"Email sent successfully to {email}")
+                print(f"Excel report email sent successfully to {email}")
             except Exception as e:
                 print(f"Failed to send email to {email}: {e}")
 
