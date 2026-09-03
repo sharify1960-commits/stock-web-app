@@ -251,12 +251,12 @@ else:
     st.sidebar.metric(label="סך כניסות למערכת (קבוע)", value=f"{current_visitors:,}")
 
     st.sidebar.markdown("---")
-    if st.sidebar.button("התנתק"):
+ if st.sidebar.button("התנתק"):
         st.session_state["logged_in"] = False
         st.session_state["role"] = ""
         st.session_state["user_email"] = ""
+        st.session_state["visited"] = False  # מאפשר למונה לעלות שוב בהתחברות הבאה
         st.rerun()
-
     # Main Dashboard View
     st.markdown("<h1 class='main-header'>📈 StockScreener Pro - לוח בקרה וניתוח טכני</h1>", unsafe_allow_html=True)
     st.success("ברוך הבא למערכת ניתוח המניות! הדוח היומי יישלח אליך אוטומטית בסיום המסחר (17:30) כל עוד השליחה מופעלת.")
