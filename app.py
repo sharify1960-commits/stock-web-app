@@ -58,6 +58,11 @@ def save_counter(count):
     with open(COUNTER_FILE, "w", encoding="utf-8") as f:
         json.dump({"count": count}, f, ensure_ascii=False, indent=4)
 
+def increment_counter():
+    count = load_counter() + 1
+    save_counter(count)
+    return count
+
 # Custom CSS styling
 st.markdown("""
 <style>
@@ -90,6 +95,8 @@ if "role" not in st.session_state:
     st.session_state["role"] = ""
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
+if "pilot_counted" not in st.session_state:
+    st.session_state["pilot_counted"] = False
 
 if "visited" not in st.session_state:
     st.session_state["visited"] = True
@@ -141,7 +148,6 @@ if not st.session_state["logged_in"]:
             submit_button = st.form_submit_button("התחבר למערכת")
             
             if submit_button:
-                # בדיקת מנהל חסינה לרווחים ואותיות רישיות/קטנות
                 if username.strip().lower() == "admin" and password == "999999":
                     st.session_state["logged_in"] = True
                     st.session_state["role"] = "admin"
@@ -165,6 +171,11 @@ if not st.session_state["logged_in"]:
                     st.error("מספר תעודת זהות או סיסמה שגוים.")
 
 else:
+    # ספירת כניסת משתמש רגיל בלבד (פעם אחת בכל סשן התחברות)
+    if st.session_state["role"] == "user" and not st.session_state["pilot_counted"]:
+        increment_counter()
+        st.session_state["pilot_counted"] = True
+
     # Sidebar & Dashboard
     st.sidebar.title("🧭 ניווט וניהול פרמטרים")
     st.sidebar.write(f"מחובר כ: **{st.session_state['role']}**")
@@ -257,6 +268,7 @@ else:
         st.session_state["role"] = ""
         st.session_state["user_email"] = ""
         st.session_state["visited"] = False
+        st.session_state["pilot_counted"] = False
         st.rerun()
 
     # Main Dashboard View
