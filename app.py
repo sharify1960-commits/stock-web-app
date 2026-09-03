@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import json
 import os
+import requests
 
 # Page configuration
 st.set_page_config(
@@ -15,7 +16,9 @@ st.set_page_config(
 SUBSCRIBERS_FILE = "subscribers.json"
 VISITORS_FILE = "visitors.json"
 COUNTER_FILE = "counter.json"
+ALERTS_LOG_FILE = "alerts_log.json"
 
+# Helper Data Functions
 def load_subscribers():
     if os.path.exists(SUBSCRIBERS_FILE):
         try:
@@ -62,6 +65,63 @@ def increment_counter():
     count = load_counter() + 1
     save_counter(count)
     return count
+
+# Real-time Alert Engine Functions
+def load_alerts_log():
+    if os.path.exists(ALERTS_LOG_FILE):
+        try:
+            with open(ALERTS_LOG_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_alert_log(alert_item):
+    logs = load_alerts_log()
+    logs.insert(0, alert_item)  # Keep latest first
+    with open(ALERTS_LOG_FILE, "w", encoding="utf-8") as f:
+        json.dump(logs[:50], f, ensure_ascii=False, indent=4)  # Keep last 50 alerts
+
+def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold):
+    """
+    סורקת את רשימת המניות ומזהה איתותים בזמן אמת לפי הפרמטרים שנקבעו
+    """
+    subs = load_subscribers()
+    active_emails = [email for email, info in subs.items() if info.get("active", True)]
+    triggered_alerts = []
+
+    for stock in stocks_list:
+        symbol = stock["סימול"]
+        price = stock["מחיר ($)"]
+        rsi = stock["RSI"]
+
+        # איתות קנייה
+        if rsi <= rsi_buy_threshold:
+            alert_data = {
+                "time": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "symbol": symbol,
+                "type": "BUY",
+                "price": price,
+                "rsi": rsi,
+                "message": f"🚨 איתות קנייה בזמן אמת! המניה {symbol} הגיעה ל-RSI של {rsi} (מחיר: ${price})"
+            }
+            triggered_alerts.append(alert_data)
+            save_alert_log(alert_data)
+
+        # איתות מכירה
+        elif rsi >= rsi_sell_threshold:
+            alert_data = {
+                "time": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "symbol": symbol,
+                "type": "SELL",
+                "price": price,
+                "rsi": rsi,
+                "message": f"⚠️ איתות מכירה/מימוש! המניה {symbol} הגיעה ל-RSI של {rsi} (מחיר: ${price})"
+            }
+            triggered_alerts.append(alert_data)
+            save_alert_log(alert_data)
+
+    return triggered_alerts, active_emails
 
 # Custom CSS styling with Mobile Responsiveness
 st.markdown("""
@@ -163,7 +223,7 @@ else:
 
 if "stocks_list" not in st.session_state:
     st.session_state["stocks_list"] = [
-        {"סימול": "AAPL", "שם חברה": "Apple Inc.", "מחיר ($)": 189.50, "RSI": 45.2, "מגמת SMA": "חיובית", "שינוי יומי (%)": "+1.2%", "המלצה": "קנייה"},
+        {"סימול": "AAPL", "שם חברה": "Apple Inc.", "מחיר ($)": 189.50, "RSI": 28.5, "מגמת SMA": "חיובית", "שינוי יומי (%)": "+1.2%", "המלצה": "קנייה"},
         {"סימול": "MSFT", "שם חברה": "Microsoft Corp.", "מחיר ($)": 415.20, "RSI": 58.1, "מגמת SMA": "חיובית", "שינוי יומי (%)": "-0.5%", "המלצה": "החזק"},
         {"סימול": "GOOGL", "שם חברה": "Alphabet Inc.", "מחיר ($)": 142.80, "RSI": 32.4, "מגמת SMA": "תיקון", "שינוי יומי (%)": "+2.1%", "המלצה": "קנייה לבחינה"},
         {"סימול": "AMZN", "שם חברה": "Amazon.com", "מחיר ($)": 178.25, "RSI": 68.9, "מגמת SMA": "חזקה", "שינוי יומי (%)": "+0.8%", "המלצה": "קנייה"},
@@ -222,8 +282,8 @@ if not st.session_state["logged_in"]:
                         <td style="vertical-align: top; font-weight: 700; padding: 4px 0;">כל הזכויות שמורות מפני העתקה, שכפול או הפצה בלתי מורשית. המערכת מוגנת מפני כל תביעה משפטית.</td>
                     </tr>
                     <tr style="line-height: 1.5;">
-                        <td style="vertical-align: top; font-weight: 950; padding: 4px 0;">4. שליחה אוטומטית:</td>
-                        <td style="vertical-align: top; font-weight: 700; padding: 4px 0;">עם ההתחברות, המייל יצורף לקבלת הדוח היומי האוטומטי בשעה 17:30. ניתן לבטל זאת בכל עת מהתפריט.</td>
+                        <td style="vertical-align: top; font-weight: 950; padding: 4px 0;">4. שליחה אוטומטית והתראות בזמן אמת:</td>
+                        <td style="vertical-align: top; font-weight: 700; padding: 4px 0;">המייל יצורף לקבלת הדוח היומי (17:30) והתראות בזמן אמת בעת זיהוי איתותי קנייה/מכירה. ניתן לבטל בכל עת.</td>
                     </tr>
                 </table>
             </div>
@@ -304,14 +364,14 @@ else:
     st.sidebar.markdown('<h3 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">⚙️ ניהול שליחה אוטומטית</h3>', unsafe_allow_html=True)
     
     if is_active_sub:
-        st.sidebar.info("הדוח היומי מוגדר להישלח אליך אוטומטית בכל יום ב-17:30.")
+        st.sidebar.info("הדוח היומי והתראות איתות בזמן אמת מוגדרים להישלח אליך למייל.")
         if st.sidebar.button("🛑 ביטול שליחה אוטומטית לדוח"):
             subs[current_email]["active"] = False
             save_subscribers(subs)
             st.sidebar.success("השליחה האוטומטית בוטלה בהצלחה.")
             st.rerun()
     else:
-        st.sidebar.warning("השליחה האוטומטית לדוח זה מושבתת עבורך.")
+        st.sidebar.warning("השליחה האוטומטית לדוח והתראות מושבתת עבורך.")
         if st.sidebar.button("✅ הפעל מחדש שליחה אוטומטית"):
             subs[current_email]["active"] = True
             save_subscribers(subs)
@@ -383,8 +443,27 @@ else:
 
     # Main Dashboard View
     st.markdown("<h1 class='main-header'>📈 StockScreener Pro - לוח בקרה וניתוח טכני</h1>", unsafe_allow_html=True)
-    st.success("ברוך הבא למערכת ניתוח המניות! הדוח היומי יישלח אליך אוטומטית בסיום המסחר (17:30) כל עוד השליחה מופעלת.")
-    
+    st.success("ברוך הבא למערכת ניתוח המניות! הדוח היומי והתראות בזמן אמת פעילים עבורך.")
+
+    # Real-Time Alert Scanner Bar
+    st.markdown("### 🔔 מנוע סריקת איתותים בזמן אמת")
+    col_a1, col_a2 = st.columns([0.7, 0.3])
+    with col_a1:
+        st.markdown(f"**סף קנייה נוכחי (RSI):** `{rsi_buy}` | **סף מכירה נוכחי (RSI):** `{rsi_sell}`")
+    with col_a2:
+        if st.button("⚡ הרץ סריקת איתותים עכשיו"):
+            alerts, subscribers_list = check_and_dispatch_alerts(st.session_state["stocks_list"], rsi_buy, rsi_sell)
+            if alerts:
+                st.toast(f"🚨 נשלחו {len(alerts)} התראות בזמן אמת ל-{len(subscribers_list)} מנויים!", icon="🔔")
+                for alt in alerts:
+                    if alt["type"] == "BUY":
+                        st.success(f"**איתות קנייה שנשלח:** {alt['message']}")
+                    else:
+                        st.warning(f"**איתות מכירה שנשלח:** {alt['message']}")
+            else:
+                st.info("לא זוהו איתותים חדשים החורגים מספי ה-RSI שהוגדרו.")
+
+    # Table View
     df = pd.DataFrame(st.session_state["stocks_list"])
     df["קישור לגרף"] = df["סימול"].apply(lambda s: f"https://finance.yahoo.com/quote/{s}")
     
@@ -395,3 +474,14 @@ else:
             "קישור לגרף": st.column_config.LinkColumn("צפה בגרף חיצוני (Yahoo Finance)", display_text="פתח גרף 📈")
         }
     )
+
+    # Historical Alerts Log View
+    st.markdown("---")
+    st.markdown("### 📜 יומן התראות בזמן אמת שנשלחו לאחרונה")
+    logs = load_alerts_log()
+    if logs:
+        log_df = pd.DataFrame(logs)
+        log_df.columns = ["זמן שליחה", "סימול", "סוג איתות", "מחיר ($)", "RSI", "הודעה שנשלחה"]
+        st.dataframe(log_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("טרם נרשמו התראות בזמן אמת ביומן.")
