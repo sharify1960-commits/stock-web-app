@@ -67,7 +67,7 @@ def increment_counter():
 st.markdown("""
 <style>
     .stApp { 
-        background: linear-gradient(0deg, #A7521C 0%, #C8692A 35%, #DF8542 70%, #EFA466 100%);
+        background: linear-gradient(0deg, #A7521C 0%, #C8692A 35%, #DF8542 70%, #EFA466 90%);
         background-attachment: fixed;
     }
     .main-header { font-size: 2.6rem; color: #ffffff; text-align: center; font-weight: 800; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
