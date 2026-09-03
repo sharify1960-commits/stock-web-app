@@ -63,11 +63,11 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with Metallic Orange Bottom-to-Top Gradient
+# Custom CSS styling with Weaker Metallic Orange Bottom-to-Top Gradient
 st.markdown("""
 <style>
     .stApp { 
-        background: linear-gradient(0deg, #8B3A00 0%, #B84A00 35%, #D96510 70%, #F28C28 100%);
+        background: linear-gradient(0deg, #C26629 0%, #D88243 35%, #E9A168 70%, #F5C49B 100%);
         background-attachment: fixed;
     }
     .main-header { font-size: 2.3rem; color: #ffffff; text-align: center; font-weight: 700; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
