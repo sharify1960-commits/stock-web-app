@@ -9,6 +9,19 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
+# הגדרת משתני ופונקציות המונה לפרויקט
+COUNTER_FILE = "counter.json"
+
+def load_counter():
+    if os.path.exists(COUNTER_FILE):
+        with open(COUNTER_FILE, "r", encoding="utf-8") as f:
+            return json.load(f).get("count", 0)
+    return 0
+
+def save_counter(count):
+    with open(COUNTER_FILE, "w", encoding="utf-8") as f:
+        json.dump({"count": count}, f)
+
 tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "AMD", "NFLX", "INTC"]
 
 def get_stock_data():
