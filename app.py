@@ -90,20 +90,6 @@ st.markdown("""
         color: white !important; 
     }
     
-    /* Maximum emphasis, thickness, and right alignment on all input labels and titles */
-    .stTextInput label, .stSelectbox label, .stNumberInput label, 
-    div[data-baseweb="input"] label, [data-testid="stForm"] label, 
-    label[data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p, .st-bp, .st-bq {
-        font-weight: 950 !important;
-        font-size: 1.45rem !important;
-        color: #ffffff !important;
-        text-shadow: 0 2px 6px rgba(0,0,0,0.95);
-        letter-spacing: 0.3px;
-        direction: rtl !important;
-        text-align: right !important;
-        display: block !important;
-        width: 100% !important;
-    }
     .stTextInput input {
         font-weight: 800 !important;
         font-size: 1.1rem !important;
@@ -114,7 +100,6 @@ st.markdown("""
         text-align: right !important;
     }
     
-    /* Perfect RTL alignment for checkbox text and wrapped lines */
     .stCheckbox {
         direction: rtl !important;
         text-align: right !important;
@@ -188,11 +173,16 @@ if not st.session_state["logged_in"]:
         st.markdown("<p style='text-align: center; color: #ffffff; font-size: 1.15rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
-            username = st.text_input("מספר תעודת זהות / מנהל:")
-            user_email_input = st.text_input("כתובת מייל (חובה):")
-            password = st.text_input("סיסמה:", type="password")
+            st.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right;">מספר תעודת זהות / מנהל:</p>', unsafe_allow_html=True)
+            username = st.text_input("מספר תעודת זהות / מנהל:", label_visibility="collapsed")
             
-            st.markdown("<h4 style='direction: rtl; text-align: right; color: #ffffff; font-size: 1.4rem; font-weight: 900; text-shadow: 0 1px 3px rgba(0,0,0,0.6);'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
+            st.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right;">כתובת מייל (חובה):</p>', unsafe_allow_html=True)
+            user_email_input = st.text_input("כתובת מייל (חובה):", label_visibility="collapsed")
+            
+            st.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right;">סיסמה:</p>', unsafe_allow_html=True)
+            password = st.text_input("סיסמה:", type="password", label_visibility="collapsed")
+            
+            st.markdown("<h4 style='direction: rtl; text-align: right; color: #FF6B00; font-size: 1.4rem; font-weight: 900; text-shadow: 0 1px 3px rgba(0,0,0,0.6);'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
             st.markdown("""
             <div style="background-color: #ffffff; border: 2px solid #000000; padding: 18px; border-radius: 10px; margin-bottom: 15px; direction: rtl; text-align: right; color: #000000;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 1rem; color: #000000;">
@@ -202,17 +192,17 @@ if not st.session_state["logged_in"]:
                         <td style="vertical-align: top; font-weight: 700;">אפליקציה זו מיועדת אך ורק למשתמשים בעלי ידע והבנה עמוקה בניתוח טכני בשווקים הפיננסיים.</td>
                     </tr>
                     <tr style="line-height: 1.6;">
-                        <td style="vertical-align: top; font-weight: 900;">2.</td>
+                        <td style="vertical-align: top; width: 25px; font-weight: 900;">2.</td>
                         <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">אחריות מסחר מלאה:</td>
                         <td style="vertical-align: top; font-weight: 700;">כל פעולות המסחר וההשקעה נעשות על אחריות המשתמש הבלעדית. המערכת אינה נושאת באחריות לכל הפסד פיננסי.</td>
                     </tr>
                     <tr style="line-height: 1.6;">
-                        <td style="vertical-align: top; font-weight: 900;">3.</td>
+                        <td style="vertical-align: top; width: 25px; font-weight: 900;">3.</td>
                         <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">קניין רוחני והגנה משפטית:</td>
                         <td style="vertical-align: top; font-weight: 700;">כל הזכויות שמורות מפני העתקה, שכפול או הפצה בלתי מורשית. המערכת מוגנת מפני כל תביעה משפטית.</td>
                     </tr>
                     <tr style="line-height: 1.6;">
-                        <td style="vertical-align: top; font-weight: 900;">4.</td>
+                        <td style="vertical-align: top; width: 25px; font-weight: 900;">4.</td>
                         <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">שליחה אוטומטית:</td>
                         <td style="vertical-align: top; font-weight: 700;">עם ההתחברות, המייל יצורף לקבלת הדוח היומי האוטומטי בשעה 17:30. ניתן לבטל זאת בכל עת מהתפריט.</td>
                     </tr>
@@ -252,7 +242,7 @@ else:
         st.session_state["pilot_counted"] = True
 
     # Sidebar & Dashboard
-    st.sidebar.title("🧭 ניווט וניהול פרמטרים")
+    st.sidebar.markdown('<h2 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">🧭 ניווט וניהול פרמטרים</h2>', unsafe_allow_html=True)
     st.sidebar.write(f"מחובר כ: **{st.session_state['role']}**")
     st.sidebar.write(f"מייל: **{st.session_state['user_email']}**")
     
@@ -262,7 +252,7 @@ else:
     
     if st.session_state["role"] == "admin":
         st.sidebar.markdown("---")
-        st.sidebar.subheader("🔐 אזור ניהול פיילוט ומנויים")
+        st.sidebar.markdown('<h3 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">🔐 אזור ניהול פיילוט ומנויים</h3>', unsafe_allow_html=True)
         
         current_counter = load_counter()
         total_subs = len(subs)
@@ -276,7 +266,7 @@ else:
             st.rerun()
 
     st.sidebar.markdown("---")
-    st.sidebar.subheader("⚙️ ניהול שליחה אוטומטית")
+    st.sidebar.markdown('<h3 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">⚙️ ניהול שליחה אוטומטית</h3>', unsafe_allow_html=True)
     
     if is_active_sub:
         st.sidebar.info("הדוח היומי מוגדר להישלח אליך אוטומטית בכל יום ב-17:30.")
@@ -294,29 +284,42 @@ else:
             st.rerun()
 
     st.sidebar.markdown("---")
-    st.sidebar.header("⚙️ סרגלי ניתוח טכני ופרמטרים")
+    st.sidebar.markdown('<h3 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">⚙️ סרגלי ניתוח טכני ופרמטרים</h3>', unsafe_allow_html=True)
     
-    rsi_buy = st.sidebar.slider("סף קנייה יתר (Oversold RSI):", min_value=10, max_value=40, value=30, step=1)
+    st.sidebar.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.15rem; direction: rtl; text-align: right; margin-bottom: 0px;">סף קנייה יתר (Oversold RSI):</p>', unsafe_allow_html=True)
+    rsi_buy = st.sidebar.slider("סף קנייה יתר (Oversold RSI):", min_value=10, max_value=40, value=30, step=1, label_visibility="collapsed")
     st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> מדד RSI נמוך מסף זה מסמן שנכס נסחר ביתר מכירה ויכול להוות הזדמנות כניסה.</div>', unsafe_allow_html=True)
     
-    rsi_sell = st.sidebar.slider("סף מכירת יתר (Overbought RSI):", min_value=60, max_value=90, value=70, step=1)
+    st.sidebar.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.15rem; direction: rtl; text-align: right; margin-bottom: 0px;">סף מכירת יתר (Overbought RSI):</p>', unsafe_allow_html=True)
+    rsi_sell = st.sidebar.slider("סף מכירת יתר (Overbought RSI):", min_value=60, max_value=90, value=70, step=1, label_visibility="collapsed")
     st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> מדד RSI גבוה מסף זה מצביע על נכס במצב קניית יתר וסיכון לתיקון חד.</div>', unsafe_allow_html=True)
     
     st.sidebar.markdown("---")
-    st.sidebar.markdown("##### ממוצעים נעים (Moving Averages)")
-    ma_short = st.sidebar.selectbox("תקופת ממוצע קצר (SMA Short):", [10, 20, 50], index=1)
+    st.sidebar.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.2rem; direction: rtl; text-align: right;">ממוצעים נעים (Moving Averages)</p>', unsafe_allow_html=True)
+    
+    st.sidebar.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.15rem; direction: rtl; text-align: right; margin-bottom: 0px;">תקופת ממוצע קצר (SMA Short):</p>', unsafe_allow_html=True)
+    ma_short = st.sidebar.selectbox("תקופת ממוצע קצר (SMA Short):", [10, 20, 50], index=1, label_visibility="collapsed")
     st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> משקף את מומנטום המחירים בטווח הקצר.</div>', unsafe_allow_html=True)
     
-    ma_long = st.sidebar.selectbox("תקופת ממוצע ארוך (SMA Long):", [100, 150, 200], index=2)
+    st.sidebar.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.15rem; direction: rtl; text-align: right; margin-bottom: 0px;">תקופת ממוצע ארוך (SMA Long):</p>', unsafe_allow_html=True)
+    ma_long = st.sidebar.selectbox("תקופת ממוצע ארוך (SMA Long):", [100, 150, 200], index=2, label_visibility="collapsed")
     st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> מגדיר את המגמה הראשית של השוק לטווח הארוך.</div>', unsafe_allow_html=True)
 
     st.sidebar.markdown("---")
-    st.sidebar.header("➕ הוספת מניה חדשה למערכת")
+    st.sidebar.markdown('<h3 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">➕ הוספת מניה חדשה למערכת</h3>', unsafe_allow_html=True)
     with st.sidebar.form("add_stock_form"):
-        new_symbol = st.text_input("סימול מניה (למשל TSLA):")
-        new_name = st.text_input("שם חברה מלא:")
-        new_price = st.number_input("מחיר ($):", min_value=0.1, value=100.0)
-        new_rsi = st.number_input("ערך RSI:", min_value=0.0, max_value=100.0, value=50.0)
+        st.sidebar.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.15rem; direction: rtl; text-align: right; margin-bottom: 0px;">סימול מניה (למשל TSLA):</p>', unsafe_allow_html=True)
+        new_symbol = st.text_input("סימול מניה (למשל TSLA):", label_visibility="collapsed")
+        
+        st.sidebar.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.15rem; direction: rtl; text-align: right; margin-bottom: 0px;">שם חברה מלא:</p>', unsafe_allow_html=True)
+        new_name = st.text_input("שם חברה מלא:", label_visibility="collapsed")
+        
+        st.sidebar.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.15rem; direction: rtl; text-align: right; margin-bottom: 0px;">מחיר ($):</p>', unsafe_allow_html=True)
+        new_price = st.number_input("מחיר ($):", min_value=0.1, value=100.0, label_visibility="collapsed")
+        
+        st.sidebar.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.15rem; direction: rtl; text-align: right; margin-bottom: 0px;">ערך RSI:</p>', unsafe_allow_html=True)
+        new_rsi = st.number_input("ערך RSI:", min_value=0.0, max_value=100.0, value=50.0, label_visibility="collapsed")
+        
         add_btn = st.form_submit_button("הוסף מניה למעקב")
         
         if add_btn and new_symbol and new_name:
