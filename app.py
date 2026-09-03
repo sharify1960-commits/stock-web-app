@@ -121,7 +121,7 @@ if not st.session_state["logged_in"]:
         """, unsafe_allow_html=True)
 
         st.markdown("<h2 style='text-align: center; color: #1e293b;'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748b;'>הזן תעודת זהות (או admin), כתובת מייל וסיסמה (או 999999 למנהל)</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #64748b;'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
             username = st.text_input("מספר תעודת זהות / מנהל:")
