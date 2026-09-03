@@ -71,11 +71,6 @@ st.markdown("""
         background-attachment: fixed;
     }
     .main-header { font-size: 2.6rem; color: #ffffff; text-align: center; font-weight: 800; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
-    .contract-box {
-        background-color: #ffffff; border: 2px solid #000000; padding: 20px;
-        border-radius: 10px; max-height: 250px; overflow-y: scroll;
-        margin-bottom: 15px; font-size: 1.05rem; font-weight: 700; color: #000000; direction: rtl; text-align: right;
-    }
     .stButton>button {
         width: 100%; border-radius: 14px; font-weight: 900; font-size: 1.8rem;
         background: linear-gradient(135deg, #FF6B00 0%, #D85A00 100%);
@@ -165,24 +160,29 @@ if not st.session_state["logged_in"]:
             
             st.markdown("<h4 style='direction: rtl; text-align: right; color: #ffffff; font-size: 1.4rem; font-weight: 900; text-shadow: 0 1px 3px rgba(0,0,0,0.6);'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
             st.markdown("""
-            <div class="contract-box">
-                <div style="display: grid; grid-template-columns: 24px auto 1fr; gap: 8px 12px; direction: rtl; text-align: right;">
-                    <span>1.</span>
-                    <span style="font-weight: 950;">ייעוד המערכת (למבינים בלבד):</span>
-                    <span>אפליקציה זו מיועדת אך ורק למשתמשים בעלי ידע והבנה עמוקה בניתוח טכני בשווקים הפיננסיים.</span>
-
-                    <span>2.</span>
-                    <span style="font-weight: 950;">אחריות מסחר מלאה:</span>
-                    <span>כל פעולות המסחר וההשקעה נעשות על אחריות המשתמש הבלעדית. המערכת אינה נושאת באחריות לכל הפסד פיננסי.</span>
-
-                    <span>3.</span>
-                    <span style="font-weight: 950;">קניין רוחני והגנה משפטית:</span>
-                    <span>כל הזכויות שמורות מפני העתקה, שכפול או הפצה בלתי מורשית. המערכת מוגנת מפני כל תביעה משפטית.</span>
-
-                    <span>4.</span>
-                    <span style="font-weight: 950;">שליחה אוטומטית:</span>
-                    <span>עם ההתחברות, המייל יצורף לקבלת הדוח היומי האוטומטי בשעה 17:30. ניתן לבטל זאת בכל עת מהתפריט.</span>
-                </div>
+            <div style="background-color: #ffffff; border: 2px solid #000000; padding: 18px; border-radius: 10px; margin-bottom: 15px; direction: rtl; text-align: right; color: #000000;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 1rem; color: #000000;">
+                    <tr style="line-height: 1.6;">
+                        <td style="vertical-align: top; width: 25px; font-weight: 900;">1.</td>
+                        <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">ייעוד המערכת (למבינים בלבד):</td>
+                        <td style="vertical-align: top; font-weight: 700;">אפליקציה זו מיועדת אך ורק למשתמשים בעלי ידע והבנה עמוקה בניתוח טכני בשווקים הפיננסיים.</td>
+                    </tr>
+                    <tr style="line-height: 1.6;">
+                        <td style="vertical-align: top; font-weight: 900;">2.</td>
+                        <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">אחריות מסחר מלאה:</td>
+                        <td style="vertical-align: top; font-weight: 700;">כל פעולות המסחר וההשקעה נעשות על אחריות המשתמש הבלעדית. המערכת אינה נושאת באחריות לכל הפסד פיננסי.</td>
+                    </tr>
+                    <tr style="line-height: 1.6;">
+                        <td style="vertical-align: top; font-weight: 900;">3.</td>
+                        <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">קניין רוחני והגנה משפטית:</td>
+                        <td style="vertical-align: top; font-weight: 700;">כל הזכויות שמורות מפני העתקה, שכפול או הפצה בלתי מורשית. המערכת מוגנת מפני כל תביעה משפטית.</td>
+                    </tr>
+                    <tr style="line-height: 1.6;">
+                        <td style="vertical-align: top; font-weight: 900;">4.</td>
+                        <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">שליחה אוטומטית:</td>
+                        <td style="vertical-align: top; font-weight: 700;">עם ההתחברות, המייל יצורף לקבלת הדוח היומי האוטומטי בשעה 17:30. ניתן לבטל זאת בכל עת מהתפריט.</td>
+                    </tr>
+                </table>
             </div>
             """, unsafe_allow_html=True)
             
@@ -213,7 +213,6 @@ if not st.session_state["logged_in"]:
                     st.error("מספר תעודת זהות או סיסמה שגוים.")
 
 else:
-    # ספירת כניסת משתמש רגיל בלבד (פעם אחת בכל סשן התחברות)
     if st.session_state["role"] == "user" and not st.session_state["pilot_counted"]:
         increment_counter()
         st.session_state["pilot_counted"] = True
@@ -227,7 +226,6 @@ else:
     current_email = st.session_state["user_email"]
     is_active_sub = subs.get(current_email, {}).get("active", True)
     
-    # אזור ניהול מונה פיילוט מופיע אוטומטית למנהל
     if st.session_state["role"] == "admin":
         st.sidebar.markdown("---")
         st.sidebar.subheader("🔐 אזור ניהול פיילוט ומנויים")
@@ -278,7 +276,6 @@ else:
     ma_long = st.sidebar.selectbox("תקופת ממוצע ארוך (SMA Long):", [100, 150, 200], index=2)
     st.sidebar.markdown('<div class="info-box"><b>הסבר שדה:</b> מגדיר את המגמה הראשית של השוק לטווח הארוך.</div>', unsafe_allow_html=True)
 
-    # Add new stock section in sidebar
     st.sidebar.markdown("---")
     st.sidebar.header("➕ הוספת מניה חדשה למערכת")
     with st.sidebar.form("add_stock_form"):
@@ -300,7 +297,6 @@ else:
             })
             st.sidebar.success(f"המניה {new_symbol.upper()} נוספה בהצלחה!")
 
-    # Persistent visitor count display in sidebar
     st.sidebar.markdown("---")
     st.sidebar.metric(label="סך כניסות למערכת (קבוע)", value=f"{current_visitors:,}")
 
