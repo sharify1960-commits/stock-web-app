@@ -63,14 +63,14 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with very soft, subtle background and bold black/white typography
+# Custom CSS styling with Darker Metallic Orange Gradient and Emphasized Bold Input Fields
 st.markdown("""
 <style>
     .stApp { 
-        background: linear-gradient(0deg, #FDF4F0 0%, #FEFAF8 50%, #FFFFFF 100%);
+        background: linear-gradient(0deg, #7A3200 0%, #A24200 35%, #CA5B0F 70%, #E87E22 100%);
         background-attachment: fixed;
     }
-    .main-header { font-size: 2.6rem; color: #000000; text-align: center; font-weight: 800; margin-bottom: 1rem; }
+    .main-header { font-size: 2.6rem; color: #ffffff; text-align: center; font-weight: 800; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
     .contract-box {
         background-color: #ffffff; border: 2px solid #000000; padding: 20px;
         border-radius: 10px; max-height: 250px; overflow-y: scroll;
@@ -78,13 +78,35 @@ st.markdown("""
     }
     .stButton>button {
         width: 100%; border-radius: 12px; font-weight: 800; font-size: 1.1rem;
-        background: linear-gradient(135deg, #000000 0%, #333333 100%);
-        color: white; border: 2px solid #000000; padding: 0.8rem 1rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%);
+        color: white; border: 2px solid #B23B00; padding: 0.8rem 1rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
-    .stButton>button:hover { background: linear-gradient(135deg, #333333 0%, #000000 100%); color: white; }
+    .stButton>button:hover { background: linear-gradient(135deg, #E65100 0%, #C43E00 100%); color: white; }
+    
+    /* Emphasizing and bolding input labels and fields */
+    .stTextInput label, .stSelectbox label, .stNumberInput label {
+        font-weight: 900 !important;
+        font-size: 1.2rem !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    }
+    .stTextInput input {
+        font-weight: 800 !important;
+        font-size: 1.05rem !important;
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        border: 2px solid #333333 !important;
+    }
+    .stCheckbox label span {
+        font-weight: 800 !important;
+        font-size: 1.05rem !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+    
     .info-box {
-        background-color: #ffffff; border-right: 4px solid #000000; border: 1px solid #CBD5E1;
+        background-color: #ffffff; border-right: 4px solid #FF6B00; border: 1px solid #CBD5E1;
         padding: 10px 15px; border-radius: 4px; font-size: 0.95rem; font-weight: 700;
         color: #000000; margin-bottom: 10px; direction: rtl; text-align: right;
     }
@@ -122,17 +144,17 @@ if not st.session_state["logged_in"]:
     with col_l2:
         st.markdown("""
         <div style="text-align: center; margin-top: 20px;">
-            <div style="display: inline-block; background: linear-gradient(135deg, #000000 0%, #222222 100%); padding: 50px; border-radius: 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); color: white; width: 260px; height: 260px;">
+            <div style="display: inline-block; background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%); padding: 50px; border-radius: 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); color: white; width: 260px; height: 260px;">
                 <div style="font-size: 75px; font-weight: 900; letter-spacing: 3px; line-height: 160px; color: #FFFFFF;">SR</div>
             </div>
-            <h3 style="margin-top: 25px; color: #000000; font-size: 2.1rem; font-weight: 900; line-height: 1.4;">
+            <h3 style="margin-top: 25px; color: #ffffff; font-size: 2.1rem; font-weight: 900; line-height: 1.4; text-shadow: 0 2px 4px rgba(0,0,0,0.4);">
                 YOUR NEXT SMART INVESTMENT<br>ההשקעה החכמה הבאה שלך 📊
             </h3>
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<h2 style='text-align: center; color: #000000; font-size: 2rem; font-weight: 900; margin-top: 20px;'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #000000; font-size: 1.15rem; font-weight: 700;'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #ffffff; font-size: 2rem; font-weight: 900; margin-top: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.4);'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #ffffff; font-size: 1.15rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
             username = st.text_input("מספר תעודת זהות / מנהל:")
