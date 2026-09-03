@@ -63,30 +63,30 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with Weaker Metallic Orange Bottom-to-Top Gradient
+# Custom CSS styling with very soft, subtle background and bold black/white typography
 st.markdown("""
 <style>
     .stApp { 
-        background: linear-gradient(0deg, #C26629 0%, #D88243 35%, #E9A168 70%, #F5C49B 100%);
+        background: linear-gradient(0deg, #FDF4F0 0%, #FEFAF8 50%, #FFFFFF 100%);
         background-attachment: fixed;
     }
-    .main-header { font-size: 2.3rem; color: #ffffff; text-align: center; font-weight: 700; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    .main-header { font-size: 2.6rem; color: #000000; text-align: center; font-weight: 800; margin-bottom: 1rem; }
     .contract-box {
-        background-color: #ffffff; border: 1px solid #CBD5E1; padding: 20px;
+        background-color: #ffffff; border: 2px solid #000000; padding: 20px;
         border-radius: 10px; max-height: 250px; overflow-y: scroll;
-        margin-bottom: 15px; font-size: 0.9rem; color: #334155; direction: rtl; text-align: right;
+        margin-bottom: 15px; font-size: 1.05rem; font-weight: 700; color: #000000; direction: rtl; text-align: right;
     }
     .stButton>button {
-        width: 100%; border-radius: 12px; font-weight: bold;
-        background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%);
-        color: white; border: none; padding: 0.7rem 1rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        width: 100%; border-radius: 12px; font-weight: 800; font-size: 1.1rem;
+        background: linear-gradient(135deg, #000000 0%, #333333 100%);
+        color: white; border: 2px solid #000000; padding: 0.8rem 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     }
-    .stButton>button:hover { background: linear-gradient(135deg, #E65100 0%, #C43E00 100%); color: white; }
+    .stButton>button:hover { background: linear-gradient(135deg, #333333 0%, #000000 100%); color: white; }
     .info-box {
-        background-color: #ffffff; border-right: 4px solid #FF6B00;
-        padding: 10px 15px; border-radius: 4px; font-size: 0.85rem;
-        color: #1e293b; margin-bottom: 10px; direction: rtl; text-align: right;
+        background-color: #ffffff; border-right: 4px solid #000000; border: 1px solid #CBD5E1;
+        padding: 10px 15px; border-radius: 4px; font-size: 0.95rem; font-weight: 700;
+        color: #000000; margin-bottom: 10px; direction: rtl; text-align: right;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -122,24 +122,24 @@ if not st.session_state["logged_in"]:
     with col_l2:
         st.markdown("""
         <div style="text-align: center; margin-top: 20px;">
-            <div style="display: inline-block; background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%); padding: 38px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); color: white; width: 210px; height: 210px;">
-                <div style="font-size: 57px; font-weight: bold; letter-spacing: 2px; line-height: 130px;">SR</div>
+            <div style="display: inline-block; background: linear-gradient(135deg, #000000 0%, #222222 100%); padding: 50px; border-radius: 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); color: white; width: 260px; height: 260px;">
+                <div style="font-size: 75px; font-weight: 900; letter-spacing: 3px; line-height: 160px; color: #FFFFFF;">SR</div>
             </div>
-            <h3 style="margin-top: 20px; color: #ffffff; font-size: 1.65rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+            <h3 style="margin-top: 25px; color: #000000; font-size: 2.1rem; font-weight: 900; line-height: 1.4;">
                 YOUR NEXT SMART INVESTMENT<br>ההשקעה החכמה הבאה שלך 📊
             </h3>
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<h2 style='text-align: center; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.3);'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #f1f5f9; font-weight: 500;'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #000000; font-size: 2rem; font-weight: 900; margin-top: 20px;'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #000000; font-size: 1.15rem; font-weight: 700;'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
             username = st.text_input("מספר תעודת זהות / מנהל:")
             user_email_input = st.text_input("כתובת מייל (חובה):")
             password = st.text_input("סיסמה:", type="password")
             
-            st.markdown("<h4 style='direction: rtl; text-align: right; color: #1e293b; font-size: 1rem;'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='direction: rtl; text-align: right; color: #000000; font-size: 1.2rem; font-weight: 900;'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
             st.markdown("""
             <div class="contract-box">
                 <b>1. ייעוד המערכת (למבינים בלבד):</b> אפליקציה זו מיועדת אך ורק למשתמשים בעלי ידע והבנה עמוקה בניתוח טכני בשווקים הפיננסיים.<br><br>
