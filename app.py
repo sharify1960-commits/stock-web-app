@@ -141,7 +141,8 @@ if not st.session_state["logged_in"]:
             submit_button = st.form_submit_button("התחבר למערכת")
             
             if submit_button:
-                if username == "admin" and password == "999999":
+                # בדיקת מנהל חסינה לרווחים ואותיות רישיות/קטנות
+                if username.strip().lower() == "admin" and password == "999999":
                     st.session_state["logged_in"] = True
                     st.session_state["role"] = "admin"
                     st.session_state["user_email"] = user_email_input if user_email_input else "admin@admin.com"
