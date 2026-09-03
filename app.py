@@ -182,6 +182,15 @@ if not st.session_state["logged_in"]:
             st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right; text-shadow: 0 0 10px rgba(255,255,255,0.8);">סיסמה:</p>', unsafe_allow_html=True)
             password = st.text_input("סיסמה:", type="password", label_visibility="collapsed")
             
+            # --- הוספת שדה הסקר ---
+            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.2rem; direction: rtl; text-align: right; text-shadow: 0 0 10px rgba(255,255,255,0.8);">💡 מה המחיר השנתי המרבי שהיית מוכן לשלם על המערכת? (סקר ללא התחייבות):</p>', unsafe_allow_html=True)
+            annual_price_pref = st.selectbox(
+                "מחיר שנתי:",
+                ["טרם נבחר", "עד 150 ש\"ח לשנה", "150 - 300 ש\"ח לשנה", "300 - 500 ש\"ח לשנה", "מעל 500 ש\"ח לשנה"],
+                label_visibility="collapsed"
+            )
+            # -----------------------
+            
             st.markdown("<h4 style='direction: rtl; text-align: right; color: #ffffff; font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px rgba(255,255,255,0.8);'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
             st.markdown("""
             <div style="background-color: #ffffff; border: 2px solid #000000; padding: 18px; border-radius: 10px; margin-bottom: 15px; direction: rtl; text-align: right; color: #000000;">
@@ -229,7 +238,11 @@ if not st.session_state["logged_in"]:
                     st.session_state["user_email"] = user_email_input
                     
                     subs = load_subscribers()
-                    subs[user_email_input] = {"active": True, "id": username}
+                    subs[user_email_input] = {
+                        "active": True, 
+                        "id": username,
+                        "expected_annual_price": annual_price_pref
+                    }
                     save_subscribers(subs)
                     
                     st.rerun()
@@ -259,6 +272,20 @@ else:
         
         st.sidebar.metric(label="📊 מונה פיילוט (Counter)", value=current_counter)
         st.sidebar.metric(label="👥 סך מנויים פעילים", value=total_subs)
+        
+        # --- טבלת סיכום תוצאות הסקר לפי מחיר ---
+        st.sidebar.markdown("---")
+        st.sidebar.markdown('<h3 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">📊 סיכום סקר תמחור</h3>', unsafe_allow_html=True)
+        
+        prices_list = [data.get("expected_annual_price", "טרם נבחר") for data in subs.values()]
+        
+        if prices_list:
+            price_summary = pd.Series(prices_list).value_counts().reset_index()
+            price_summary.columns = ["טווח מחיר מוצע", "כמות בוחרים"]
+            st.sidebar.dataframe(price_summary, use_container_width=True, hide_index=True)
+        else:
+            st.sidebar.info("טרם התקבלו תשובות לסקר.")
+        # -----------------------------------
         
         if st.sidebar.button("🔄 איפוס מונה פיילוט"):
             save_counter(0)
