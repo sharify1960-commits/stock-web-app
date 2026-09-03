@@ -63,7 +63,7 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with 75% softer background gradient and enlarged, prominent login button
+# Custom CSS styling with 75% softer background gradient and highly emphasized checkbox text
 st.markdown("""
 <style>
     .stApp { 
@@ -99,10 +99,10 @@ st.markdown("""
         border: 2px solid #333333 !important;
     }
     .stCheckbox label span {
-        font-weight: 800 !important;
-        font-size: 1.05rem !important;
+        font-weight: 900 !important;
+        font-size: 1.18rem !important;
         color: #ffffff !important;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        text-shadow: 0 2px 4px rgba(0,0,0,0.7);
     }
     
     .info-box {
