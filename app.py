@@ -14,6 +14,7 @@ st.set_page_config(
 
 SUBSCRIBERS_FILE = "subscribers.json"
 VISITORS_FILE = "visitors.json"
+COUNTER_FILE = "counter.json"
 
 def load_subscribers():
     if os.path.exists(SUBSCRIBERS_FILE):
@@ -43,6 +44,20 @@ def increment_visitor_count():
     with open(VISITORS_FILE, "w", encoding="utf-8") as f:
         json.dump({"count": count}, f, ensure_ascii=False)
     return count
+
+# פונקציות ניהול מונה הפיילוט
+def load_counter():
+    if os.path.exists(COUNTER_FILE):
+        try:
+            with open(COUNTER_FILE, "r", encoding="utf-8") as f:
+                return json.load(f).get("count", 0)
+        except:
+            return 0
+    return 0
+
+def save_counter(count):
+    with open(COUNTER_FILE, "w", encoding="utf-8") as f:
+        json.dump({"count": count}, f, ensure_ascii=False, indent=4)
 
 # Custom CSS styling
 st.markdown("""
@@ -215,6 +230,31 @@ else:
                 "המלצה": "בדיקה"
             })
             st.sidebar.success(f"המניה {new_symbol.upper()} נוספה בהצלחה!")
+
+    # ----------------------------------------------------
+    # אזור ניהול מערכת ומונה פיילוט בסרגל הצד
+    # ----------------------------------------------------
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🔐 אזור ניהול פיילוט ומנויים")
+    admin_password = st.sidebar.text_input("סיסמת מנהל:", type="password")
+    
+    if admin_password == "admin123":  # ניתן לשנות סיסמה לפי הצורך
+        st.sidebar.success("מחובר כמנהל בהצלחה")
+        
+        current_counter = load_counter()
+        total_subs = len(subs)
+        
+        st.sidebar.metric(label="📊 מונה פיילוט (Counter)", value=current_counter)
+        st.sidebar.metric(label="👥 סך מנויים פעילים", value=total_subs)
+        
+        if st.sidebar.button("🔄 איפוס מונה פיילוט"):
+            save_counter(0)
+            st.sidebar.success("המונה אופס בהצלחה ל-0!")
+            st.rerun()
+            
+    elif admin_password:
+        st.sidebar.error("סיסמה שגויה")
+    # ----------------------------------------------------
 
     # Persistent visitor count display in sidebar
     st.sidebar.markdown("---")
