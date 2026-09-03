@@ -1,10 +1,9 @@
-- name: Install dependencies
-      run: |
-        pip install -r requirements.txt
+name: Send Daily Stock Report
+
 on:
   schedule:
-    - cron: '30 15 * * 1-5' # שעה 17:30 שעון ישראל (15:30 UTC בימים א'-ה')
-  workflow_dispatch: # מאפשר הפעלה ידנית מתי שתרצה דרך לשונית Actions
+    - cron: '30 15 * * 1-5'
+  workflow_dispatch:
 
 jobs:
   run-script:
@@ -20,7 +19,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install pandas
+        pip install -r requirements.txt
 
     - name: Run stock report script
       env:
