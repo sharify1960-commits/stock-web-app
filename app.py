@@ -63,7 +63,7 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with 80% softer background gradient and highly emphasized field titles and buttons
+# Custom CSS styling with 80% softer background gradient and heavily emphasized field titles and buttons
 st.markdown("""
 <style>
     .stApp { 
@@ -77,23 +77,25 @@ st.markdown("""
         margin-bottom: 15px; font-size: 1.05rem; font-weight: 700; color: #000000; direction: rtl; text-align: right;
     }
     .stButton>button {
-        width: 100%; border-radius: 14px; font-weight: 900; font-size: 1.7rem;
+        width: 100%; border-radius: 14px; font-weight: 900; font-size: 1.8rem;
         background: linear-gradient(135deg, #FF6B00 0%, #D85A00 100%);
-        color: white; border: 3px solid #FFFFFF; padding: 1.1rem 1rem;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        color: white; border: 3px solid #FFFFFF; padding: 1.2rem 1rem;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
     }
     .stButton>button:hover { background: linear-gradient(135deg, #D85A00 0%, #B54900 100%); color: white; }
     
-    /* Highly emphasized input labels and titles */
-    .stTextInput label, .stSelectbox label, .stNumberInput label, div[data-baseweb="input"] label, .st-bp {
+    /* Maximum emphasis on all input labels and titles */
+    .stTextInput label, .stSelectbox label, .stNumberInput label, 
+    div[data-baseweb="input"] label, [data-testid="stForm"] label, 
+    label[data-testid="stWidgetLabel"], .st-bp, .st-bq {
         font-weight: 900 !important;
-        font-size: 1.3rem !important;
+        font-size: 1.35rem !important;
         color: #ffffff !important;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        text-shadow: 0 2px 5px rgba(0,0,0,0.9);
     }
     .stTextInput input {
         font-weight: 800 !important;
-        font-size: 1.05rem !important;
+        font-size: 1.1rem !important;
         color: #000000 !important;
         background-color: #ffffff !important;
         border: 2px solid #333333 !important;
