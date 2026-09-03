@@ -63,7 +63,7 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with 75% softer background gradient and highly emphasized checkbox text
+# Custom CSS styling with 80% softer background gradient and highly emphasized field titles and buttons
 st.markdown("""
 <style>
     .stApp { 
@@ -84,12 +84,12 @@ st.markdown("""
     }
     .stButton>button:hover { background: linear-gradient(135deg, #D85A00 0%, #B54900 100%); color: white; }
     
-    /* Emphasizing and bolding input labels and fields */
-    .stTextInput label, .stSelectbox label, .stNumberInput label {
+    /* Highly emphasized input labels and titles */
+    .stTextInput label, .stSelectbox label, .stNumberInput label, div[data-baseweb="input"] label, .st-bp {
         font-weight: 900 !important;
-        font-size: 1.2rem !important;
+        font-size: 1.3rem !important;
         color: #ffffff !important;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
     .stTextInput input {
         font-weight: 800 !important;
