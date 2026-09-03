@@ -45,7 +45,6 @@ def increment_visitor_count():
         json.dump({"count": count}, f, ensure_ascii=False)
     return count
 
-# פונקציות ניהול מונה הפיילוט
 def load_counter():
     if os.path.exists(COUNTER_FILE):
         try:
@@ -122,12 +121,12 @@ if not st.session_state["logged_in"]:
         """, unsafe_allow_html=True)
 
         st.markdown("<h2 style='text-align: center; color: #1e293b;'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748b;'>הזן תעודת זהות, כתובת מייל (חובה לקבלת דוחות אוטומטיים) וסיסמה</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #64748b;'>הזן תעודת זהות (או admin), כתובת מייל וסיסמה (או 999999 למנהל)</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
-            username = st.text_input("מספר תעודת זהות:")
+            username = st.text_input("מספר תעודת זהות / מנהל:")
             user_email_input = st.text_input("כתובת מייל (חובה):")
-            password = st.text_input("סיסמה (6 ספרות אחרונות של הת.ז.):", type="password")
+            password = st.text_input("סיסמה:", type="password")
             
             st.markdown("<h4 style='direction: rtl; text-align: right; color: #1e293b; font-size: 1rem;'>📋 תנאי שימוש והסרת אחריות משפטית</h4>", unsafe_allow_html=True)
             st.markdown("""
@@ -174,6 +173,22 @@ else:
     current_email = st.session_state["user_email"]
     is_active_sub = subs.get(current_email, {}).get("active", True)
     
+    # אם המשתמש מחובר כמנהל - הצג אוטומטית את אזור הניהול והמונה בסרגל הצד
+    if st.session_state["role"] == "admin":
+        st.sidebar.markdown("---")
+        st.sidebar.subheader("🔐 אזור ניהול פיילוט ומנויים")
+        
+        current_counter = load_counter()
+        total_subs = len(subs)
+        
+        st.sidebar.metric(label="📊 מונה פיילוט (Counter)", value=current_counter)
+        st.sidebar.metric(label="👥 סך מנויים פעילים", value=total_subs)
+        
+        if st.sidebar.button("🔄 איפוס מונה פיילוט"):
+            save_counter(0)
+            st.sidebar.success("המונה אופס בהצלחה ל-0!")
+            st.rerun()
+
     st.sidebar.markdown("---")
     st.sidebar.subheader("⚙️ ניהול שליחה אוטומטית")
     
@@ -230,31 +245,6 @@ else:
                 "המלצה": "בדיקה"
             })
             st.sidebar.success(f"המניה {new_symbol.upper()} נוספה בהצלחה!")
-
-    # ----------------------------------------------------
-    # אזור ניהול מערכת ומונה פיילוט בסרגל הצד
-    # ----------------------------------------------------
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("🔐 אזור ניהול פיילוט ומנויים")
-    admin_password = st.sidebar.text_input("סיסמת מנהל:", type="password")
-    
-    if admin_password == "admin123":  # ניתן לשנות סיסמה לפי הצורך
-        st.sidebar.success("מחובר כמנהל בהצלחה")
-        
-        current_counter = load_counter()
-        total_subs = len(subs)
-        
-        st.sidebar.metric(label="📊 מונה פיילוט (Counter)", value=current_counter)
-        st.sidebar.metric(label="👥 סך מנויים פעילים", value=total_subs)
-        
-        if st.sidebar.button("🔄 איפוס מונה פיילוט"):
-            save_counter(0)
-            st.sidebar.success("המונה אופס בהצלחה ל-0!")
-            st.rerun()
-            
-    elif admin_password:
-        st.sidebar.error("סיסמה שגויה")
-    # ----------------------------------------------------
 
     # Persistent visitor count display in sidebar
     st.sidebar.markdown("---")
