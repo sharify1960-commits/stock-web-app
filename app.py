@@ -6,7 +6,7 @@ import os
 
 # Page configuration
 st.set_page_config(
-    page_title="StockScreener Pro - איציק",
+    page_title="StockScreener Pro",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -63,11 +63,14 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling
+# Custom CSS styling with Metallic Orange Bottom-to-Top Gradient
 st.markdown("""
 <style>
-    .stApp { background-color: #f8f9fa; }
-    .main-header { font-size: 2.3rem; color: #1f2937; text-align: center; font-weight: 700; margin-bottom: 1rem; }
+    .stApp { 
+        background: linear-gradient(0deg, #8B3A00 0%, #B84A00 35%, #D96510 70%, #F28C28 100%);
+        background-attachment: fixed;
+    }
+    .main-header { font-size: 2.3rem; color: #ffffff; text-align: center; font-weight: 700; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
     .contract-box {
         background-color: #ffffff; border: 1px solid #CBD5E1; padding: 20px;
         border-radius: 10px; max-height: 250px; overflow-y: scroll;
@@ -77,11 +80,11 @@ st.markdown("""
         width: 100%; border-radius: 12px; font-weight: bold;
         background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%);
         color: white; border: none; padding: 0.7rem 1rem;
-        box-shadow: 0 4px 6px rgba(230, 81, 0, 0.3);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
     .stButton>button:hover { background: linear-gradient(135deg, #E65100 0%, #C43E00 100%); color: white; }
     .info-box {
-        background-color: #e2e8f0; border-right: 4px solid #FF6B00;
+        background-color: #ffffff; border-right: 4px solid #FF6B00;
         padding: 10px 15px; border-radius: 4px; font-size: 0.85rem;
         color: #1e293b; margin-bottom: 10px; direction: rtl; text-align: right;
     }
@@ -119,32 +122,34 @@ if not st.session_state["logged_in"]:
     with col_l2:
         st.markdown("""
         <div style="text-align: center; margin-top: 20px;">
-            <div style="display: inline-block; background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(230,81,0,0.3); color: white; width: 140px; height: 140px;">
-                <div style="font-size: 38px; font-weight: bold; letter-spacing: 2px;">SR</div>
-                <div style="font-size: 20px; margin-top: 5px; font-weight: 600;">איציק</div>
+            <div style="display: inline-block; background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%); padding: 38px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); color: white; width: 210px; height: 210px;">
+                <div style="font-size: 57px; font-weight: bold; letter-spacing: 2px; line-height: 130px;">SR</div>
             </div>
-            <h3 style="margin-top: 15px; color: #334155; font-size: 1.1rem;">השקעה הבאה שלך | YOUR NEXT INVESTMENT 📊</h3>
+            <h3 style="margin-top: 20px; color: #ffffff; font-size: 1.65rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                YOUR NEXT SMART INVESTMENT<br>ההשקעה החכמה הבאה שלך 📊
+            </h3>
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<h2 style='text-align: center; color: #1e293b;'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748b;'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.3);'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #f1f5f9; font-weight: 500;'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
             username = st.text_input("מספר תעודת זהות / מנהל:")
             user_email_input = st.text_input("כתובת מייל (חובה):")
             password = st.text_input("סיסמה:", type="password")
             
-            st.markdown("<h4 style='direction: rtl; text-align: right; color: #1e293b; font-size: 1rem;'>📋 תנאי שימוש והסרת אחריות משפטית</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='direction: rtl; text-align: right; color: #1e293b; font-size: 1rem;'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
             st.markdown("""
             <div class="contract-box">
-                <b>1. היעדר ייעוץ השקעות:</b> המערכת מספקת נתונים טכניים בלבד ואינה מהווה ייעוץ השקעות.<br><br>
-                <b>2. אחריות המשתמש:</b> השימוש במידע נעשה על אחריות המשתמש בלבד.<br><br>
-                <b>3. שליחה אוטומטית:</b> עם ההתחברות, המייל יצורף לקבלת הדוח היומי האוטומטי בשעה 17:30. ניתן לבטל זאת בכל עת מהתפריט.
+                <b>1. ייעוד המערכת (למבינים בלבד):</b> אפליקציה זו מיועדת אך ורק למשתמשים בעלי ידע והבנה עמוקה בניתוח טכני בשווקים הפיננסיים.<br><br>
+                <b>2. אחריות מסחר מלאה:</b> כל פעולות המסחר וההשקעה נעשות על אחריות המשתמש הבלעדית. המערכת אינה נושאת באחריות לכל הפסד פיננסי.<br><br>
+                <b>3. קניין רוחני והגנה משפטית:</b> כל הזכויות שמורות מפני העתקה, שכפול או הפצה בלתי מורשית. המערכת מוגנת מפני כל תביעה משפטית.<br><br>
+                <b>4. שליחה אוטומטית:</b> עם ההתחברות, המייל יצורף לקבלת הדוח היומי האוטומטי בשעה 17:30. ניתן לבטל זאת בכל עת מהתפריט.
             </div>
             """, unsafe_allow_html=True)
             
-            agree = st.checkbox("אני מאשר/ת שקראתי את תנאי השימוש ומסכים/ה לקבלת דוחות אוטומטיים.")
+            agree = st.checkbox("אני מאשר/ת שקראתי והבנתי את תנאי השימוש, שאני מבין/ה בניתוח טכני, שהמסחר על אחריותי בלבד, ושכל הזכויות שמורות.")
             submit_button = st.form_submit_button("התחבר למערכת")
             
             if submit_button:
@@ -154,7 +159,7 @@ if not st.session_state["logged_in"]:
                     st.session_state["user_email"] = user_email_input if user_email_input else "admin@admin.com"
                     st.rerun()
                 elif not agree:
-                    st.error("יש לאשר את תנאי השימוש לפני ההתחברות.")
+                    st.error("יש לאשר את תנאי השימוש, ההצהרה והגנת הזכויות לפני ההתחברות.")
                 elif not user_email_input or "@" not in user_email_input:
                     st.error("נא להזין כתובת מייל תקינה לקבלת הדוח.")
                 elif len(password) >= 4:
