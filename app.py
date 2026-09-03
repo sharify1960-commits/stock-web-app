@@ -63,7 +63,7 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with 80% softer background gradient and heavily emphasized field titles and buttons
+# Custom CSS styling with enhanced button styling for maximum weight and size
 st.markdown("""
 <style>
     .stApp { 
@@ -71,13 +71,24 @@ st.markdown("""
         background-attachment: fixed;
     }
     .main-header { font-size: 2.6rem; color: #ffffff; text-align: center; font-weight: 800; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
-    .stButton>button {
-        width: 100%; border-radius: 14px; font-weight: 900; font-size: 1.8rem;
-        background: linear-gradient(135deg, #FF6B00 0%, #D85A00 100%);
-        color: white; border: 3px solid #FFFFFF; padding: 1.2rem 1rem;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+    
+    /* Enhanced button styling for maximum boldness and size */
+    .stButton>button, [data-testid="stFormSubmitButton"]>button {
+        width: 100% !important; 
+        border-radius: 14px !important; 
+        font-weight: 950 !important; 
+        font-size: 1.5rem !important;
+        background: linear-gradient(135deg, #FF6B00 0%, #D85A00 100%) !important;
+        color: white !important; 
+        border: 3px solid #FFFFFF !important; 
+        padding: 1rem 1rem !important;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5) !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
     }
-    .stButton>button:hover { background: linear-gradient(135deg, #D85A00 0%, #B54900 100%); color: white; }
+    .stButton>button:hover, [data-testid="stFormSubmitButton"]>button:hover { 
+        background: linear-gradient(135deg, #D85A00 0%, #B54900 100%) !important; 
+        color: white !important; 
+    }
     
     /* Maximum emphasis on all input labels and titles */
     .stTextInput label, .stSelectbox label, .stNumberInput label, 
