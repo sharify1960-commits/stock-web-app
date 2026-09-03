@@ -63,7 +63,7 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with enhanced button styling for maximum weight and size
+# Custom CSS styling with maximum emphasis on input field labels and buttons
 st.markdown("""
 <style>
     .stApp { 
@@ -90,14 +90,15 @@ st.markdown("""
         color: white !important; 
     }
     
-    /* Maximum emphasis on all input labels and titles */
+    /* Maximum emphasis and thickness on all input labels and titles */
     .stTextInput label, .stSelectbox label, .stNumberInput label, 
     div[data-baseweb="input"] label, [data-testid="stForm"] label, 
-    label[data-testid="stWidgetLabel"], .st-bp, .st-bq {
-        font-weight: 900 !important;
-        font-size: 1.35rem !important;
+    label[data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p, .st-bp, .st-bq {
+        font-weight: 950 !important;
+        font-size: 1.45rem !important;
         color: #ffffff !important;
-        text-shadow: 0 2px 5px rgba(0,0,0,0.9);
+        text-shadow: 0 2px 6px rgba(0,0,0,0.95);
+        letter-spacing: 0.3px;
     }
     .stTextInput input {
         font-weight: 800 !important;
