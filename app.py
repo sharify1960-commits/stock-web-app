@@ -63,11 +63,11 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with Darker Metallic Orange Gradient and Emphasized Bold Input Fields
+# Custom CSS styling with slightly softer 90% background and enlarged, bolded elements
 st.markdown("""
 <style>
     .stApp { 
-        background: linear-gradient(0deg, #7A3200 0%, #A24200 35%, #CA5B0F 70%, #E87E22 100%);
+        background: linear-gradient(0deg, #8C3A05 0%, #B24B0D 35%, #D4691B 70%, #EF8E37 100%);
         background-attachment: fixed;
     }
     .main-header { font-size: 2.6rem; color: #ffffff; text-align: center; font-weight: 800; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
@@ -77,9 +77,9 @@ st.markdown("""
         margin-bottom: 15px; font-size: 1.05rem; font-weight: 700; color: #000000; direction: rtl; text-align: right;
     }
     .stButton>button {
-        width: 100%; border-radius: 12px; font-weight: 800; font-size: 1.1rem;
+        width: 100%; border-radius: 12px; font-weight: 900; font-size: 1.45rem;
         background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%);
-        color: white; border: 2px solid #B23B00; padding: 0.8rem 1rem;
+        color: white; border: 2px solid #B23B00; padding: 0.9rem 1rem;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
     .stButton>button:hover { background: linear-gradient(135deg, #E65100 0%, #C43E00 100%); color: white; }
@@ -161,7 +161,7 @@ if not st.session_state["logged_in"]:
             user_email_input = st.text_input("כתובת מייל (חובה):")
             password = st.text_input("סיסמה:", type="password")
             
-            st.markdown("<h4 style='direction: rtl; text-align: right; color: #000000; font-size: 1.2rem; font-weight: 900;'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='direction: rtl; text-align: right; color: #ffffff; font-size: 1.4rem; font-weight: 900; text-shadow: 0 1px 3px rgba(0,0,0,0.6);'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
             st.markdown("""
             <div class="contract-box">
                 <b>1. ייעוד המערכת (למבינים בלבד):</b> אפליקציה זו מיועדת אך ורק למשתמשים בעלי ידע והבנה עמוקה בניתוח טכני בשווקים הפיננסיים.<br><br>
