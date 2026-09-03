@@ -173,16 +173,16 @@ if not st.session_state["logged_in"]:
         st.markdown("<p style='text-align: center; color: #ffffff; font-size: 1.15rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
-            st.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right;">מספר תעודת זהות / מנהל:</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right; text-shadow: 0 0 10px rgba(255,255,255,0.8);">מספר תעודת זהות / מנהל:</p>', unsafe_allow_html=True)
             username = st.text_input("מספר תעודת זהות / מנהל:", label_visibility="collapsed")
             
-            st.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right;">כתובת מייל (חובה):</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right; text-shadow: 0 0 10px rgba(255,255,255,0.8);">כתובת מייל (חובה):</p>', unsafe_allow_html=True)
             user_email_input = st.text_input("כתובת מייל (חובה):", label_visibility="collapsed")
             
-            st.markdown('<p style="color: #FF6B00; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right;">סיסמה:</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right; text-shadow: 0 0 10px rgba(255,255,255,0.8);">סיסמה:</p>', unsafe_allow_html=True)
             password = st.text_input("סיסמה:", type="password", label_visibility="collapsed")
             
-            st.markdown("<h4 style='direction: rtl; text-align: right; color: #FF6B00; font-size: 1.4rem; font-weight: 900; text-shadow: 0 1px 3px rgba(0,0,0,0.6);'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='direction: rtl; text-align: right; color: #ffffff; font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px rgba(255,255,255,0.8);'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
             st.markdown("""
             <div style="background-color: #ffffff; border: 2px solid #000000; padding: 18px; border-radius: 10px; margin-bottom: 15px; direction: rtl; text-align: right; color: #000000;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 1rem; color: #000000;">
