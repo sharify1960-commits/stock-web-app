@@ -63,25 +63,32 @@ def increment_counter():
     save_counter(count)
     return count
 
-# Custom CSS styling with proper RTL alignment and bold text for all fields and labels
+# Custom CSS styling with Mobile Responsiveness
 st.markdown("""
 <style>
     .stApp { 
         background: linear-gradient(0deg, #A7521C 0%, #C8692A 10%, #DF8542 30%, #EFA466 80%);
         background-attachment: fixed;
     }
-    .main-header { font-size: 2.6rem; color: #ffffff; text-align: center; font-weight: 800; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+    .main-header { 
+        font-size: 2.2rem; 
+        color: #ffffff; 
+        text-align: center; 
+        font-weight: 800; 
+        margin-bottom: 1rem; 
+        text-shadow: 0 2px 4px rgba(0,0,0,0.4); 
+    }
     
-    /* Enhanced button styling for maximum boldness and size */
+    /* Enhanced button styling */
     .stButton>button, [data-testid="stFormSubmitButton"]>button {
         width: 100% !important; 
         border-radius: 14px !important; 
         font-weight: 950 !important; 
-        font-size: 1.5rem !important;
+        font-size: 1.3rem !important;
         background: linear-gradient(135deg, #FF6B00 0%, #D85A00 100%) !important;
         color: white !important; 
-        border: 3px solid #FFFFFF !important; 
-        padding: 1rem 1rem !important;
+        border: 2px solid #FFFFFF !important; 
+        padding: 0.8rem 1rem !important;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5) !important;
         text-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
     }
@@ -92,7 +99,7 @@ st.markdown("""
     
     .stTextInput input {
         font-weight: 800 !important;
-        font-size: 1.1rem !important;
+        font-size: 1rem !important;
         color: #000000 !important;
         background-color: #ffffff !important;
         border: 2px solid #333333 !important;
@@ -113,7 +120,7 @@ st.markdown("""
     }
     .stCheckbox label span, .stCheckbox div[data-testid="stMarkdownContainer"] p {
         font-weight: 900 !important;
-        font-size: 1.18rem !important;
+        font-size: 1.05rem !important;
         color: #ffffff !important;
         text-shadow: 0 2px 4px rgba(0,0,0,0.7);
         direction: rtl !important;
@@ -125,6 +132,15 @@ st.markdown("""
         background-color: #ffffff; border-right: 4px solid #FF6B00; border: 1px solid #CBD5E1;
         padding: 10px 15px; border-radius: 4px; font-size: 0.95rem; font-weight: 700;
         color: #000000; margin-bottom: 10px; direction: rtl; text-align: right;
+    }
+
+    /* Mobile Responsive Rules */
+    @media (max-width: 768px) {
+        .main-header { font-size: 1.6rem !important; }
+        [data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; }
+        .logo-box { width: 160px !important; height: 160px !important; padding: 20px !important; }
+        .logo-text { font-size: 50px !important; line-height: 120px !important; }
+        .terms-table td { display: block !important; width: 100% !important; padding: 2px 0 !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -156,64 +172,58 @@ if "stocks_list" not in st.session_state:
 
 # Login Screen
 if not st.session_state["logged_in"]:
-    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
+    col_l1, col_l2, col_l3 = st.columns([0.1, 0.8, 0.1])
     with col_l2:
         st.markdown("""
-        <div style="text-align: center; margin-top: 20px;">
-            <div style="display: inline-block; background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%); padding: 50px; border-radius: 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); color: white; width: 260px; height: 260px;">
-                <div style="font-size: 75px; font-weight: 900; letter-spacing: 3px; line-height: 160px; color: #FFFFFF;">SR</div>
+        <div style="text-align: center; margin-top: 10px;">
+            <div class="logo-box" style="display: inline-block; background: linear-gradient(135deg, #FF6B00 0%, #E65100 100%); padding: 30px; border-radius: 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); color: white; width: 180px; height: 180px;">
+                <div class="logo-text" style="font-size: 60px; font-weight: 900; letter-spacing: 2px; line-height: 120px; color: #FFFFFF;">SR</div>
             </div>
-            <h3 style="margin-top: 25px; color: #ffffff; font-size: 2.1rem; font-weight: 900; line-height: 1.4; text-shadow: 0 2px 4px rgba(0,0,0,0.4);">
+            <h3 style="margin-top: 15px; color: #ffffff; font-size: 1.6rem; font-weight: 900; line-height: 1.3; text-shadow: 0 2px 4px rgba(0,0,0,0.4);">
                 YOUR NEXT SMART INVESTMENT<br>ההשקעה החכמה הבאה שלך 📊
             </h3>
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<h2 style='text-align: center; color: #ffffff; font-size: 2rem; font-weight: 900; margin-top: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.4);'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #ffffff; font-size: 1.15rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #ffffff; font-size: 1.6rem; font-weight: 900; margin-top: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.4);'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #ffffff; font-size: 1rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
-            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right; text-shadow: 0 0 10px rgba(255,255,255,0.8);">מספר תעודת זהות / מנהל:</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.1rem; direction: rtl; text-align: right; margin-bottom: 2px;">מספר תעודת זהות / מנהל:</p>', unsafe_allow_html=True)
             username = st.text_input("מספר תעודת זהות / מנהל:", label_visibility="collapsed")
             
-            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right; text-shadow: 0 0 10px rgba(255,255,255,0.8);">כתובת מייל (חובה):</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.1rem; direction: rtl; text-align: right; margin-bottom: 2px;">כתובת מייל (חובה):</p>', unsafe_allow_html=True)
             user_email_input = st.text_input("כתובת מייל (חובה):", label_visibility="collapsed")
             
-            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.3rem; direction: rtl; text-align: right; text-shadow: 0 0 10px rgba(255,255,255,0.8);">סיסמה:</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.1rem; direction: rtl; text-align: right; margin-bottom: 2px;">סיסמה:</p>', unsafe_allow_html=True)
             password = st.text_input("סיסמה:", type="password", label_visibility="collapsed")
             
-            # --- הוספת שדה הסקר ---
-            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.2rem; direction: rtl; text-align: right; text-shadow: 0 0 10px rgba(255,255,255,0.8);">💡 מה המחיר השנתי המרבי שהיית מוכן לשלם על המערכת? (סקר ללא התחייבות):</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.05rem; direction: rtl; text-align: right; margin-top: 10px; margin-bottom: 2px;">💡 מה המחיר השנתי המרבי שהיית מוכן לשלם על המערכת? (סקר ללא התחייבות):</p>', unsafe_allow_html=True)
             annual_price_pref = st.selectbox(
                 "מחיר שנתי:",
                 ["טרם נבחר", "עד 150 ש\"ח לשנה", "150 - 300 ש\"ח לשנה", "300 - 500 ש\"ח לשנה", "מעל 500 ש\"ח לשנה"],
                 label_visibility="collapsed"
             )
-            # -----------------------
             
-            st.markdown("<h4 style='direction: rtl; text-align: right; color: #ffffff; font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px rgba(255,255,255,0.8);'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='direction: rtl; text-align: right; color: #ffffff; font-size: 1.2rem; font-weight: 900; margin-top: 15px;'>📋 תנאי שימוש, הצהרת מומחיות והגנה משפטית</h4>", unsafe_allow_html=True)
             st.markdown("""
-            <div style="background-color: #ffffff; border: 2px solid #000000; padding: 18px; border-radius: 10px; margin-bottom: 15px; direction: rtl; text-align: right; color: #000000;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 1rem; color: #000000;">
-                    <tr style="line-height: 1.6;">
-                        <td style="vertical-align: top; width: 25px; font-weight: 900;">1.</td>
-                        <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">ייעוד המערכת (למבינים בלבד):</td>
-                        <td style="vertical-align: top; font-weight: 700;">אפליקציה זו מיועדת אך ורק למשתמשים בעלי ידע והבנה עמוקה בניתוח טכני בשווקים הפיננסיים.</td>
+            <div style="background-color: #ffffff; border: 2px solid #000000; padding: 12px; border-radius: 10px; margin-bottom: 15px; direction: rtl; text-align: right; color: #000000;">
+                <table class="terms-table" style="width: 100%; border-collapse: collapse; font-size: 0.95rem; color: #000000;">
+                    <tr style="line-height: 1.5; border-bottom: 1px solid #ddd;">
+                        <td style="vertical-align: top; font-weight: 950; padding: 4px 0;">1. ייעוד המערכת (למבינים בלבד):</td>
+                        <td style="vertical-align: top; font-weight: 700; padding: 4px 0;">אפליקציה זו מיועדת אך ורק למשתמשים בעלי ידע והבנה עמוקה בניתוח טכני בשווקים הפיננסיים.</td>
                     </tr>
-                    <tr style="line-height: 1.6;">
-                        <td style="vertical-align: top; width: 25px; font-weight: 900;">2.</td>
-                        <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">אחריות מסחר מלאה:</td>
-                        <td style="vertical-align: top; font-weight: 700;">כל פעולות המסחר וההשקעה נעשות על אחריות המשתמש הבלעדית. המערכת אינה נושאת באחריות לכל הפסד פיננסי.</td>
+                    <tr style="line-height: 1.5; border-bottom: 1px solid #ddd;">
+                        <td style="vertical-align: top; font-weight: 950; padding: 4px 0;">2. אחריות מסחר מלאה:</td>
+                        <td style="vertical-align: top; font-weight: 700; padding: 4px 0;">כל פעולות המסחר וההשקעה נעשות על אחריות המשתמש הבלעדית. המערכת אינה נושאת באחריות לכל הפסד פיננסי.</td>
                     </tr>
-                    <tr style="line-height: 1.6;">
-                        <td style="vertical-align: top; width: 25px; font-weight: 900;">3.</td>
-                        <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">קניין רוחני והגנה משפטית:</td>
-                        <td style="vertical-align: top; font-weight: 700;">כל הזכויות שמורות מפני העתקה, שכפול או הפצה בלתי מורשית. המערכת מוגנת מפני כל תביעה משפטית.</td>
+                    <tr style="line-height: 1.5; border-bottom: 1px solid #ddd;">
+                        <td style="vertical-align: top; font-weight: 950; padding: 4px 0;">3. קניין רוחני והגנה משפטית:</td>
+                        <td style="vertical-align: top; font-weight: 700; padding: 4px 0;">כל הזכויות שמורות מפני העתקה, שכפול או הפצה בלתי מורשית. המערכת מוגנת מפני כל תביעה משפטית.</td>
                     </tr>
-                    <tr style="line-height: 1.6;">
-                        <td style="vertical-align: top; width: 25px; font-weight: 900;">4.</td>
-                        <td style="vertical-align: top; font-weight: 950; padding-left: 10px; white-space: nowrap;">שליחה אוטומטית:</td>
-                        <td style="vertical-align: top; font-weight: 700;">עם ההתחברות, המייל יצורף לקבלת הדוח היומי האוטומטי בשעה 17:30. ניתן לבטל זאת בכל עת מהתפריט.</td>
+                    <tr style="line-height: 1.5;">
+                        <td style="vertical-align: top; font-weight: 950; padding: 4px 0;">4. שליחה אוטומטית:</td>
+                        <td style="vertical-align: top; font-weight: 700; padding: 4px 0;">עם ההתחברות, המייל יצורף לקבלת הדוח היומי האוטומטי בשעה 17:30. ניתן לבטל זאת בכל עת מהתפריט.</td>
                     </tr>
                 </table>
             </div>
@@ -273,7 +283,6 @@ else:
         st.sidebar.metric(label="📊 מונה פיילוט (Counter)", value=current_counter)
         st.sidebar.metric(label="👥 סך מנויים פעילים", value=total_subs)
         
-        # --- טבלת סיכום תוצאות הסקר לפי מחיר ---
         st.sidebar.markdown("---")
         st.sidebar.markdown('<h3 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">📊 סיכום סקר תמחור</h3>', unsafe_allow_html=True)
         
@@ -285,7 +294,6 @@ else:
             st.sidebar.dataframe(price_summary, use_container_width=True, hide_index=True)
         else:
             st.sidebar.info("טרם התקבלו תשובות לסקר.")
-        # -----------------------------------
         
         if st.sidebar.button("🔄 איפוס מונה פיילוט"):
             save_counter(0)
