@@ -10,12 +10,12 @@ import pandas as pd
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
-# הגדרות עמוד ראשי
+# הגדרות עמוד - פתיחת ה-Sidebar כברירת מחדל
 st.set_page_config(
     page_title="StockScreener Pro",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="expanded",  # מביא את הסרגל פתוח מראש
 )
 
 SUBSCRIBERS_FILE = "subscribers.json"
@@ -78,7 +78,6 @@ def generate_broker_link(symbol, platform):
         return f"https://finance.yahoo.com/quote/{symbol_clean}"
 
 
-# --- מנוע איתותים ושליחת מיילים מותאמים אישית ---
 def load_alerts_log():
     if os.path.exists(ALERTS_LOG_FILE):
         try:
@@ -179,7 +178,6 @@ def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold
     return triggered_alerts
 
 
-# פונקציית עזר להצגת הלוגו המעוצב
 def render_logo():
     logo_html = """
     <style>
@@ -219,7 +217,7 @@ def render_logo():
     st.markdown(logo_html, unsafe_allow_html=True)
 
 
-# עיצוב ויזואלי (CSS)
+# עיצוב ויזואלי (CSS) - כולל הדגשת סרגל הצד כדי שלא יעלם
 st.markdown(
     """
 <style>
@@ -227,7 +225,13 @@ st.markdown(
         background: linear-gradient(0deg, #A7521C 0%, #C8692A 10%, #DF8542 30%, #EFA466 80%);
         background-attachment: fixed;
     }
-    /* כותרת ראשית לבנה מבריקה ובולטת */
+    
+    /* עיצוב והבלטת סרגל הצד Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        border-left: 3px solid #FF6B00 !important;
+    }
+    
     .main-header { 
         font-size: 2.6rem !important; 
         color: #FFFFFF !important; 
@@ -245,11 +249,10 @@ st.markdown(
         background: linear-gradient(135deg, #FF6B00 0%, #D85A00 100%) !important; color: white !important; border: 2px solid #FFFFFF !important; padding: 0.8rem 1rem !important;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5) !important; text-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
     }
-    /* הגדלת גופן, הדגשה ויישור לימין עבור כותרות שדות הקלט */
     [data-testid="stWidgetLabel"] label, label {
         font-size: 1.15rem !important;
         font-weight: 800 !important;
-        color: #ffffff !important;
+        color: #222222 !important;
         direction: rtl !important;
         text-align: right !important;
         display: block !important;
@@ -336,9 +339,13 @@ if "stocks_list" not in st.session_state:
         },
     ]
 
-# --- סרגל צדדי (Sidebar) ראשי - זמין תמיד ---
+
+# ==============================================================================
+# 🧭 סרגל ניהול, הגדרות ספים והסברים על ניתוח טכני (SIDEBAR)
+# ==============================================================================
 st.sidebar.markdown(
-    '<h2 style="color: #FF6B00; font-weight: 900;">🧭 ניווט וניהול</h2>',
+    '<h2 style="color: #FF6B00; font-weight: 900; text-align: right;">🧭 סרגל'
+    " ניהול והגדרות</h2>",
     unsafe_allow_html=True,
 )
 
@@ -355,32 +362,35 @@ st.sidebar.subheader("⚙️ סרגלי ניתוח טכני ופרמטרים")
 # סליידר והסבר: סף קניית יתר
 rsi_buy = st.sidebar.slider("סף קנייה יתר (Oversold RSI):", 10, 40, 35)
 st.sidebar.info(
-    "**הסבר שדה:** מדד RSI נמוך מסף זה מסמן שנכס נסחר במכירת יתר ויכול"
-    " להוות הזדמנות כניסה."
+    "💡 **הסבר ניתוח טכני:** מדד RSI נמוך מסף זה מסמן שנכס נסחר במכירת"
+    " יתר (Oversold) ויכול להוות הזדמנות כניסה."
 )
 
 # סליידר והסבר: סף מכירת יתר
 rsi_sell = st.sidebar.slider("סף מכירת יתר (Overbought RSI):", 60, 90, 70)
 st.sidebar.info(
-    "**הסבר שדה:** מדד RSI גבוה מסף זה מצביע על נכס במצב קניית יתר וסיכון"
-    " לתיקון חד."
+    "💡 **הסבר ניתוח טכני:** מדד RSI גבוה מסף זה מצביע על נכס במצב קניית"
+    " יתר (Overbought) וסיכון לתיקון חד."
 )
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("ממוצעים נעים (Moving Averages)")
+st.sidebar.subheader("📈 ממוצעים נעים (Moving Averages)")
 
 # ממוצע נע קצר
 sma_short = st.sidebar.selectbox(
     "תקופת ממוצע קצר (SMA Short):", [5, 10, 20, 50], index=2
 )
-st.sidebar.info("**הסבר שדה:** משקף את מומנטום המחירים בטווח הקצר.")
+st.sidebar.info(
+    "💡 **הסבר:** משקף את מומנטום המחירים בטווח הקצר (כגון ממוצע 20 יום)."
+)
 
 # ממוצע נע ארוך
 sma_long = st.sidebar.selectbox(
     "תקופת ממוצע ארוך (SMA Long):", [50, 100, 200], index=2
 )
 st.sidebar.info(
-    "**הסבר שדה:** מגדיר את המגמה הראשית של השוק לטווח הארוך."
+    "💡 **הסבר:** מגדיר את המגמה הראשית של השוק לטווח הארוך (כגון ממוצע 200"
+    " יום)."
 )
 
 st.sidebar.markdown("---")
@@ -407,15 +417,17 @@ with st.sidebar.form("add_stock_form"):
             st.rerun()
 
 st.sidebar.markdown("---")
-st.sidebar.metric("סך כניסות למערכת", current_visitors)
+st.sidebar.metric("📊 סך כניסות למערכת", current_visitors)
 
 if st.session_state["logged_in"]:
-    if st.sidebar.button("התנתק"):
+    if st.sidebar.button("🔓 התנתק"):
         st.session_state["logged_in"] = False
         st.rerun()
 
+# ==============================================================================
+# תתוכן מרכזי
+# ==============================================================================
 
-# --- מסך התחברות והסברים ---
 if not st.session_state["logged_in"]:
     col_l1, col_l2, col_l3 = st.columns([0.1, 0.8, 0.1])
     with col_l2:
@@ -517,8 +529,7 @@ if not st.session_state["logged_in"]:
                     st.rerun()
 
 else:
-    # --- לוח בקרה ראשי (מחובר) ---
-
+    # --- לוח בקרה ראשי ---
     render_logo()
 
     st.markdown(
