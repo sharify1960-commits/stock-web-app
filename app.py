@@ -1,4 +1,4 @@
-# import json
+import json
 import os
 import smtplib
 import urllib.parse
@@ -181,6 +181,46 @@ def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold
     return triggered_alerts
 
 
+# פונקציית עזר להצגת הלוגו המעוצב
+def render_logo():
+    logo_html = """
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+        .custom-logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .custom-logo {
+            background: linear-gradient(135deg, #C8692A 0%, #A7521C 100%);
+            border: 3px solid #FFFFFF;
+            border-radius: 12px;
+            padding: 15px 30px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            max-width: 90%;
+        }
+        .custom-logo-text {
+            color: #FFFFFF;
+            font-family: 'Great Vibes', 'Brush Script MT', cursive;
+            font-size: 2.3rem;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin: 0;
+            line-height: 1.2;
+        }
+    </style>
+    <div class="custom-logo-container">
+        <div class="custom-logo">
+            <h1 class="custom-logo-text">SR - מערכת ניהול השקעות מתקדמת</h1>
+        </div>
+    </div>
+    """
+    st.markdown(logo_html, unsafe_allow_html=True)
+
+
 # עיצוב ויזואלי (CSS)
 st.markdown(
     """
@@ -292,6 +332,9 @@ if "stocks_list" not in st.session_state:
 if not st.session_state["logged_in"]:
     col_l1, col_l2, col_l3 = st.columns([0.1, 0.8, 0.1])
     with col_l2:
+        # הצגת הלוגו במסך הכניסה
+        render_logo()
+
         st.markdown(
             "<h1 style='text-align: center; color: #ffffff; font-weight: 900;'>🚀"
             " StockScreener Pro - מערכת איתותים בזמן אמת</h1>",
@@ -467,6 +510,9 @@ else:
         st.rerun()
 
     # תוכן מרכזי
+    # הצגת הלוגו בראש פנל הניהול
+    render_logo()
+
     st.markdown(
         "<h1 class='main-header'>📈 StockScreener Pro - לוח בקרה וניתוח"
         " טכני</h1>",
