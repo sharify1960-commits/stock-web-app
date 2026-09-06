@@ -156,7 +156,6 @@ def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold
             )
 
         if alert_type:
-            # שליחה מותאמת אישית לכל מנוע ומנוי
             for email_to, user_info in subs.items():
                 if user_info.get("active", True):
                     user_broker = user_info.get("platform", "Interactive Brokers")
@@ -164,7 +163,6 @@ def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold
 
                     send_email_notification(email_to, msg_text, user_link)
 
-            # רישום בלוג
             default_link = generate_broker_link(symbol, "Interactive Brokers")
             alert_data = {
                 "time": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -338,11 +336,89 @@ if "stocks_list" not in st.session_state:
         },
     ]
 
+# --- סרגל צדדי (Sidebar) ראשי - זמין תמיד ---
+st.sidebar.markdown(
+    '<h2 style="color: #FF6B00; font-weight: 900;">🧭 ניווט וניהול</h2>',
+    unsafe_allow_html=True,
+)
+
+if st.session_state["logged_in"]:
+    st.sidebar.write(f"מחובר כ: **{st.session_state['user_email']}**")
+    if st.session_state["role"] == "admin":
+        st.sidebar.info("👑 מצב מנהל מערכת (Admin)")
+else:
+    st.sidebar.write("מצב: **אורח / טרם התחבר/ה**")
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("⚙️ סרגלי ניתוח טכני ופרמטרים")
+
+# סליידר והסבר: סף קניית יתר
+rsi_buy = st.sidebar.slider("סף קנייה יתר (Oversold RSI):", 10, 40, 35)
+st.sidebar.info(
+    "**הסבר שדה:** מדד RSI נמוך מסף זה מסמן שנכס נסחר במכירת יתר ויכול"
+    " להוות הזדמנות כניסה."
+)
+
+# סליידר והסבר: סף מכירת יתר
+rsi_sell = st.sidebar.slider("סף מכירת יתר (Overbought RSI):", 60, 90, 70)
+st.sidebar.info(
+    "**הסבר שדה:** מדד RSI גבוה מסף זה מצביע על נכס במצב קניית יתר וסיכון"
+    " לתיקון חד."
+)
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("ממוצעים נעים (Moving Averages)")
+
+# ממוצע נע קצר
+sma_short = st.sidebar.selectbox(
+    "תקופת ממוצע קצר (SMA Short):", [5, 10, 20, 50], index=2
+)
+st.sidebar.info("**הסבר שדה:** משקף את מומנטום המחירים בטווח הקצר.")
+
+# ממוצע נע ארוך
+sma_long = st.sidebar.selectbox(
+    "תקופת ממוצע ארוך (SMA Long):", [50, 100, 200], index=2
+)
+st.sidebar.info(
+    "**הסבר שדה:** מגדיר את המגמה הראשית של השוק לטווח הארוך."
+)
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("➕ הוספת מניה חדשה למערכת")
+with st.sidebar.form("add_stock_form"):
+    new_symbol = st.text_input("סימול מניה (למשל TSLA):")
+    new_name = st.text_input("שם חברה מלא:")
+    new_price = st.number_input("מחיר ($):", value=100.0)
+    new_rsi = st.number_input("ערך RSI:", value=50.0)
+    add_submitted = st.form_submit_button("הוסף מניה למעקב")
+
+    if add_submitted:
+        if new_symbol and new_name:
+            st.session_state["stocks_list"].append({
+                "סימול": new_symbol.upper(),
+                "שם חברה": new_name,
+                "מחיר ($)": new_price,
+                "RSI": new_rsi,
+                "מגמת SMA": "ניטרלי",
+                "שינוי יומי (%)": "+0.0%",
+                "המלצה": "בדיקה",
+            })
+            st.sidebar.success(f"המניה {new_symbol} הוספה בהצלחה!")
+            st.rerun()
+
+st.sidebar.markdown("---")
+st.sidebar.metric("סך כניסות למערכת", current_visitors)
+
+if st.session_state["logged_in"]:
+    if st.sidebar.button("התנתק"):
+        st.session_state["logged_in"] = False
+        st.rerun()
+
+
 # --- מסך התחברות והסברים ---
 if not st.session_state["logged_in"]:
     col_l1, col_l2, col_l3 = st.columns([0.1, 0.8, 0.1])
     with col_l2:
-        # הצגת הלוגו במסך הכניסה
         render_logo()
 
         st.markdown(
@@ -351,7 +427,6 @@ if not st.session_state["logged_in"]:
             unsafe_allow_html=True,
         )
 
-        # הסבר על המערכת
         st.markdown(
             """
             <div class="legal-box">
@@ -362,7 +437,6 @@ if not st.session_state["logged_in"]:
             unsafe_allow_html=True,
         )
 
-        # טופס התחברות
         st.markdown(
             "<h3 style='text-align: center; color: #ffffff;'>כניסת לקוחות והרשמה"
             " לפיילוט 🔐</h3>",
@@ -395,7 +469,6 @@ if not st.session_state["logged_in"]:
 
             st.markdown("---")
 
-            # הסכם משפטי וזכויות יוצרים
             st.markdown(
                 """
                 <div style="font-size: 0.85rem; color: #333333; background-color: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 10px; direction: rtl; text-align: right;">
@@ -446,81 +519,6 @@ if not st.session_state["logged_in"]:
 else:
     # --- לוח בקרה ראשי (מחובר) ---
 
-    # סרגל צדדי (Sidebar)
-    st.sidebar.markdown(
-        '<h2 style="color: #FF6B00; font-weight: 900;">🧭 ניווט וניהול</h2>',
-        unsafe_allow_html=True,
-    )
-    st.sidebar.write(f"מחובר כ: **{st.session_state['user_email']}**")
-    if st.session_state["role"] == "admin":
-        st.sidebar.info("👑 מצב מנהל מערכת (Admin)")
-
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("⚙️ סרגלי ניתוח טכני ופרמטרים")
-
-    # סליידר והסבר: סף קניית יתר
-    rsi_buy = st.sidebar.slider("סף קנייה יתר (Oversold RSI):", 10, 40, 35)
-    st.sidebar.info(
-        "**הסבר שדה:** מדד RSI נמוך מסף זה מסמן שנכס נסחר במכירת יתר ויכול"
-        " להוות הזדמנות כניסה."
-    )
-
-    # סליידר והסבר: סף מכירת יתר
-    rsi_sell = st.sidebar.slider("סף מכירת יתר (Overbought RSI):", 60, 90, 70)
-    st.sidebar.info(
-        "**הסבר שדה:** מדד RSI גבוה מסף זה מצביע על נכס במצב קניית יתר וסיכון"
-        " לתיקון חד."
-    )
-
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("ממוצעים נעים (Moving Averages)")
-
-    # ממוצע נע קצר
-    sma_short = st.sidebar.selectbox(
-        "תקופת ממוצע קצר (SMA Short):", [5, 10, 20, 50], index=2
-    )
-    st.sidebar.info("**הסבר שדה:** משקף את מומנטום המחירים בטווח הקצר.")
-
-    # ממוצע נע ארוך
-    sma_long = st.sidebar.selectbox(
-        "תקופת ממוצע ארוך (SMA Long):", [50, 100, 200], index=2
-    )
-    st.sidebar.info(
-        "**הסבר שדה:** מגדיר את המגמה הראשית של השוק לטווח הארוך."
-    )
-
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("➕ הוספת מניה חדשה למערכת")
-    with st.sidebar.form("add_stock_form"):
-        new_symbol = st.text_input("סימול מניה (למשל TSLA):")
-        new_name = st.text_input("שם חברה מלא:")
-        new_price = st.number_input("מחיר ($):", value=100.0)
-        new_rsi = st.number_input("ערך RSI:", value=50.0)
-        add_submitted = st.form_submit_button("הוסף מניה למעקב")
-
-        if add_submitted:
-            if new_symbol and new_name:
-                st.session_state["stocks_list"].append({
-                    "סימול": new_symbol.upper(),
-                    "שם חברה": new_name,
-                    "מחיר ($)": new_price,
-                    "RSI": new_rsi,
-                    "מגמת SMA": "ניטרלי",
-                    "שינוי יומי (%)": "+0.0%",
-                    "המלצה": "בדיקה",
-                })
-                st.sidebar.success(f"המניה {new_symbol} הוספה בהצלחה!")
-                st.rerun()
-
-    st.sidebar.markdown("---")
-    st.sidebar.metric("סך כניסות למערכת", current_visitors)
-
-    if st.sidebar.button("התנתק"):
-        st.session_state["logged_in"] = False
-        st.rerun()
-
-    # תוכן מרכזי
-    # הצגת הלוגו בראש פנל הניהול
     render_logo()
 
     st.markdown(
@@ -532,10 +530,8 @@ else:
         f"ברוך הבא! המערכת מחוברת לפלטפורמת **{st.session_state['trading_platform']}**, והתראות איתות יכללו קישור ישיר אליה."
     )
 
-    # רענון אוטומטי כל דקה
     count = st_autorefresh(interval=60000, limit=1000, key="stock_autorefresh")
 
-    # הרצת מנוע האיתותים ושליחת מיילים מותאמים
     alerts = check_and_dispatch_alerts(
         st.session_state["stocks_list"], rsi_buy, rsi_sell
     )
@@ -549,11 +545,9 @@ else:
                 unsafe_allow_html=True,
             )
 
-    # טבלת מניות ראשית
     st.subheader("📊 רשימת מניות במעקב בזמן אמת")
     df = pd.DataFrame(st.session_state["stocks_list"])
 
-    # הוספת עמודת קישור ישיר לטבלה
     df[f"פתח ב-{st.session_state['trading_platform']}"] = df["סימול"].apply(
         lambda s: generate_broker_link(s, st.session_state["trading_platform"])
     )
@@ -568,7 +562,6 @@ else:
         use_container_width=True,
     )
 
-    # יומן התראות אחרונות שנשלחו
     st.markdown("---")
     st.subheader("📜 יומן התראות בזמן אמת שנשלחו לאחרונה")
     logs = load_alerts_log()
@@ -577,7 +570,6 @@ else:
     else:
         st.write("טרם נרשמו התראות במערכת.")
 
-    # --- תוספות פאנל מנהל מערכת (Admin Only) ---
     if st.session_state["role"] == "admin":
         st.markdown("---")
         st.markdown(
