@@ -217,7 +217,7 @@ def render_logo():
     st.markdown(logo_html, unsafe_allow_html=True)
 
 
-# עיצוב ויזואלי (CSS) - כולל הדגשת סרגל הצד כדי שלא יעלם
+# עיצוב ויזואלי (CSS) - כולל הקטנת ה-Sidebar כך שייכנס במסך מלא
 st.markdown(
     """
 <style>
@@ -226,12 +226,44 @@ st.markdown(
         background-attachment: fixed;
     }
     
-    /* עיצוב והבלטת סרגל הצד Sidebar */
+    /* עיצוב, הבלטה והקטנה של סרגל הצד Sidebar להתאמה מלאה למסך */
     [data-testid="stSidebar"] {
         background-color: rgba(255, 255, 255, 0.95) !important;
         border-left: 3px solid #FF6B00 !important;
     }
     
+    [data-testid="stSidebar"] .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1rem !important;
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
+    }
+
+    [data-testid="stSidebar"] h2 {
+        font-size: 1.3rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    [data-testid="stSidebar"] h3 {
+        font-size: 1.05rem !important;
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.3rem !important;
+    }
+
+    [data-testid="stSidebar"] .stAlert {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.82rem !important;
+        margin-bottom: 0.4rem !important;
+    }
+
+    [data-testid="stSidebar"] hr {
+        margin: 0.6rem 0 !important;
+    }
+
+    [data-testid="stSidebar"] label {
+        font-size: 0.9rem !important;
+    }
+
     .main-header { 
         font-size: 2.6rem !important; 
         color: #FFFFFF !important; 
@@ -245,8 +277,8 @@ st.markdown(
         letter-spacing: 1px;
     }
     .stButton>button, [data-testid="stFormSubmitButton"]>button {
-        width: 100% !important; border-radius: 14px !important; font-weight: 950 !important; font-size: 1.3rem !important;
-        background: linear-gradient(135deg, #FF6B00 0%, #D85A00 100%) !important; color: white !important; border: 2px solid #FFFFFF !important; padding: 0.8rem 1rem !important;
+        width: 100% !important; border-radius: 14px !important; font-weight: 950 !important; font-size: 1.2rem !important;
+        background: linear-gradient(135deg, #FF6B00 0%, #D85A00 100%) !important; color: white !important; border: 2px solid #FFFFFF !important; padding: 0.6rem 1rem !important;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5) !important; text-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
     }
     [data-testid="stWidgetLabel"] label, label {
@@ -258,7 +290,7 @@ st.markdown(
         display: block !important;
     }
     .stTextInput input, .stSelectbox select, .stNumberInput input {
-        font-weight: 800 !important; font-size: 1rem !important; color: #000000 !important; background-color: #ffffff !important; border: 2px solid #333333 !important; direction: rtl !important; text-align: right !important;
+        font-weight: 800 !important; font-size: 0.95rem !important; color: #000000 !important; background-color: #ffffff !important; border: 2px solid #333333 !important; direction: rtl !important; text-align: right !important;
     }
     .legal-box {
         background-color: rgba(255, 255, 255, 0.9);
@@ -344,8 +376,7 @@ if "stocks_list" not in st.session_state:
 # 🧭 סרגל ניהול, הגדרות ספים והסברים על ניתוח טכני (SIDEBAR)
 # ==============================================================================
 st.sidebar.markdown(
-    '<h2 style="color: #FF6B00; font-weight: 900; text-align: right;">🧭 סרגל'
-    " ניהול והגדרות</h2>",
+    '<h2 style="color: #FF6B00; font-weight: 900; text-align: right;">🧭 סרגל ניהול והגדרות</h2>',
     unsafe_allow_html=True,
 )
 
@@ -361,37 +392,22 @@ st.sidebar.subheader("⚙️ סרגלי ניתוח טכני ופרמטרים")
 
 # סליידר והסבר: סף קניית יתר
 rsi_buy = st.sidebar.slider("סף קנייה יתר (Oversold RSI):", 10, 40, 35)
-st.sidebar.info(
-    "💡 **הסבר ניתוח טכני:** מדד RSI נמוך מסף זה מסמן שנכס נסחר במכירת"
-    " יתר (Oversold) ויכול להוות הזדמנות כניסה."
-)
+st.sidebar.info("💡 מדד RSI נמוך מסף זה מסמן מכירת יתר (Oversold) והזדמנות כניסה.")
 
 # סליידר והסבר: סף מכירת יתר
 rsi_sell = st.sidebar.slider("סף מכירת יתר (Overbought RSI):", 60, 90, 70)
-st.sidebar.info(
-    "💡 **הסבר ניתוח טכני:** מדד RSI גבוה מסף זה מצביע על נכס במצב קניית"
-    " יתר (Overbought) וסיכון לתיקון חד."
-)
+st.sidebar.info("💡 מדד RSI גבוה מסף זה מצביע על קניית יתר (Overbought) וסיכון לתיקון.")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("📈 ממוצעים נעים (Moving Averages)")
 
 # ממוצע נע קצר
-sma_short = st.sidebar.selectbox(
-    "תקופת ממוצע קצר (SMA Short):", [5, 10, 20, 50], index=2
-)
-st.sidebar.info(
-    "💡 **הסבר:** משקף את מומנטום המחירים בטווח הקצר (כגון ממוצע 20 יום)."
-)
+sma_short = st.sidebar.selectbox("תקופת ממוצע קצר (SMA Short):", [5, 10, 20, 50], index=2)
+st.sidebar.info("💡 משקף את מומנטום המחירים בטווח הקצר (כגון ממוצע 20 יום).")
 
 # ממוצע נע ארוך
-sma_long = st.sidebar.selectbox(
-    "תקופת ממוצע ארוך (SMA Long):", [50, 100, 200], index=2
-)
-st.sidebar.info(
-    "💡 **הסבר:** מגדיר את המגמה הראשית של השוק לטווח הארוך (כגון ממוצע 200"
-    " יום)."
-)
+sma_long = st.sidebar.selectbox("תקופת ממוצע ארוך (SMA Long):", [50, 100, 200], index=2)
+st.sidebar.info("💡 מגדיר את המגמה הראשית של השוק לטווח הארוך (כגון ממוצע 200 יום).")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("➕ הוספת מניה חדשה למערכת")
@@ -425,8 +441,21 @@ if st.session_state["logged_in"]:
         st.rerun()
 
 # ==============================================================================
-# תתוכן מרכזי
+# תוכן מרכזי
 # ==============================================================================
+
+# כפתור מעבר מהיר להגדרות עבור מסכים קטנים / מובייל
+st.markdown(
+    """
+    <div style="text-align: center; margin-bottom: 10px;">
+        <button onclick="document.querySelector('[data-testid=\'stSidebar\']').scrollIntoView({behavior: 'smooth'});" 
+                style="background-color: #222222; color: #FFFFFF; border: 1px solid #FF6B00; padding: 6px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; cursor: pointer;">
+            ⚙️ פתח הגדרות וסרגל ניהול
+        </button>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 if not st.session_state["logged_in"]:
     col_l1, col_l2, col_l3 = st.columns([0.1, 0.8, 0.1])
@@ -533,8 +562,7 @@ else:
     render_logo()
 
     st.markdown(
-        "<h1 class='main-header'>📈 StockScreener Pro - לוח בקרה וניתוח"
-        " טכני</h1>",
+        "<h1 class='main-header'>📈 StockScreener Pro - לוח בקרה וניתוח טכני</h1>",
         unsafe_allow_html=True,
     )
     st.info(
