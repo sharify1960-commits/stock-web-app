@@ -10,7 +10,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
-# Page configuration
+# הגדרות עמוד ראשי
 st.set_page_config(
     page_title="StockScreener Pro",
     page_icon="📈",
@@ -24,7 +24,7 @@ COUNTER_FILE = "counter.json"
 ALERTS_LOG_FILE = "alerts_log.json"
 
 
-# Helper Data Functions
+# --- פונקציות עזר לשמירה וטעינת נתונים ---
 def load_subscribers():
   if os.path.exists(SUBSCRIBERS_FILE):
     try:
@@ -58,25 +58,10 @@ def increment_visitor_count():
   return count
 
 
-def load_counter():
-  if os.path.exists(COUNTER_FILE):
-    try:
-      with open(COUNTER_FILE, "r", encoding="utf-8") as f:
-        return json.load(f).get("count", 0)
-    except:
-      return 0
+def reset_visitor_count():
+  with open(VISITORS_FILE, "w", encoding="utf-8") as f:
+    json.dump({"count": 0}, f, ensure_ascii=False)
   return 0
-
-
-def save_counter(count):
-  with open(COUNTER_FILE, "w", encoding="utf-8") as f:
-    json.dump({"count": count}, f, ensure_ascii=False, indent=4)
-
-
-def increment_counter():
-  count = load_counter() + 1
-  save_counter(count)
-  return count
 
 
 def generate_broker_link(symbol, platform):
@@ -93,7 +78,7 @@ def generate_broker_link(symbol, platform):
     return f"https://finance.yahoo.com/quote/{symbol_clean}"
 
 
-# Real-time Alert Engine Functions
+# --- מנוע איתותים ושליחת מיילים ---
 def load_alerts_log():
   if os.path.exists(ALERTS_LOG_FILE):
     try:
@@ -112,7 +97,6 @@ def save_alert_log(alert_item):
 
 
 def send_email_notification(recipient, alert_msg, action_link):
-  """שולחת מייל התראה בפועל בעזרת הפרטים שמוגדרים ב-Streamlit Secrets"""
   try:
     if "email" not in st.secrets:
       return False, "הגדרות email חסרות ב-Secrets"
@@ -188,18 +172,13 @@ def check_and_dispatch_alerts(
       triggered_alerts.append(alert_data)
       save_alert_log(alert_data)
 
-      # שליחת מייל לכל המשתמשים הפעילים
       for email_to in active_emails:
-        success, err = send_email_notification(
-            email_to, msg_text, broker_link
-        )
-        if not success:
-          st.error(f"שגיאה בשליחת מייל ל-{email_to}: {err}")
+        send_email_notification(email_to, msg_text, broker_link)
 
   return triggered_alerts, active_emails
 
 
-# Custom CSS styling
+# עיצוב ויזואלי (CSS)
 st.markdown(
     """
 <style>
@@ -223,7 +202,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Initialize session state
+# ניהול Session State
 if "logged_in" not in st.session_state:
   st.session_state["logged_in"] = False
 if "role" not in st.session_state:
@@ -231,9 +210,7 @@ if "role" not in st.session_state:
 if "user_email" not in st.session_state:
   st.session_state["user_email"] = ""
 if "trading_platform" not in st.session_state:
-  st.session_state["trading_platform"] = "TradingView"
-if "pilot_counted" not in st.session_state:
-  st.session_state["pilot_counted"] = False
+  st.session_state["trading_platform"] = "Interactive Brokers"
 
 if "visited" not in st.session_state:
   st.session_state["visited"] = True
@@ -290,7 +267,7 @@ if "stocks_list" not in st.session_state:
       },
   ]
 
-# Login Screen
+# --- מסך התחברות ---
 if not st.session_state["logged_in"]:
   col_l1, col_l2, col_l3 = st.columns([0.1, 0.8, 0.1])
   with col_l2:
@@ -304,17 +281,17 @@ if not st.session_state["logged_in"]:
       user_email_input = st.text_input("כתובת מייל (חובה):")
       password = st.text_input("סיסמה:", type="password")
       platform_pref = st.selectbox(
-          "פלטפורמת מסחר:",
+          "פלטפורמת מסחר מועדפת:",
           [
-              "TradingView",
               "Interactive Brokers",
+              "TradingView",
               "Yahoo Finance",
               "Investing.com",
               "Webull",
           ],
       )
       annual_price_pref = st.selectbox(
-          "מחיר שנתי מוערך:",
+          "מחיר שנתי מוערך לפיילוט:",
           [
               "טרם נבחר",
               'עד 150 ש"ח לשנה',
@@ -359,31 +336,67 @@ if not st.session_state["logged_in"]:
           st.rerun()
 
 else:
-  # Main Dashboard View
+  # --- לוח בקרה ראשי (מחובר) ---
+
+  # סרגל צדדי (Sidebar) - משותף לכולם
   st.sidebar.markdown(
       '<h2 style="color: #FF6B00; font-weight: 900;">🧭 ניווט וניהול</h2>',
       unsafe_allow_html=True,
   )
   st.sidebar.write(f"מחובר כ: **{st.session_state['user_email']}**")
+  if st.session_state["role"] == "admin":
+    st.sidebar.info("👑 מצב מנהל מערכת (Admin)")
 
   st.sidebar.markdown("---")
-  rsi_buy = st.sidebar.slider("סף קנייה יתר (Oversold RSI):", 10, 40, 35)
+  st.sidebar.subheader("⚙️ סרגלי ניתוח טכני")
+  rsi_buy = st.sidebar.slider("סף קניית יתר (Oversold RSI):", 10, 40, 35)
   rsi_sell = st.sidebar.slider("סף מכירת יתר (Overbought RSI):", 60, 90, 70)
+
+  st.sidebar.markdown("---")
+  st.sidebar.subheader("➕ הוספת מניה חדשה למערכת")
+  with st.sidebar.form("add_stock_form"):
+    new_symbol = st.text_input("סימול מניה (למשל TSLA):")
+    new_name = st.text_input("שם חברה מלא:")
+    new_price = st.number_input("מחיר ($):", value=100.0)
+    new_rsi = st.number_input("ערך RSI:", value=50.0)
+    add_submitted = st.form_submit_button("הוסף מניה למעקב")
+
+    if add_submitted:
+      if new_symbol and new_name:
+        st.session_state["stocks_list"].append({
+            "סימול": new_symbol.upper(),
+            "שם חברה": new_name,
+            "מחיר ($)": new_price,
+            "RSI": new_rsi,
+            "מגמת SMA": "ניטרלי",
+            "שינוי יומי (%)": "+0.0%",
+            "המלצה": "בדיקה",
+        })
+        st.sidebar.success(f"המניה {new_symbol} הוספה בהצלחה!")
+        st.rerun()
+
+  st.sidebar.markdown("---")
+  st.sidebar.metric("סך כניסות למערכת", current_visitors)
 
   if st.sidebar.button("התנתק"):
     st.session_state["logged_in"] = False
     st.rerun()
 
+  # תוכן מרכזי
   st.markdown(
       "<h1 class='main-header'>📈 StockScreener Pro - לוח בקרה וניתוח"
       " טכני</h1>",
       unsafe_allow_html=True,
   )
+  st.info(
+      f"ברוך הבא! המערכת מחוברת לפלטפורמת **{st.session_state['trading_platform']}**, והתראות איתות יכללו קישור ישיר אליה."
+  )
 
+  # רענון אוטומטי כל דקה
   count = st_autorefresh(interval=60000, limit=1000, key="stock_autorefresh")
 
-  # הרצת מנוע האיתותים ושליחת המיילים בפועל
-  alerts, subscribers_list = check_and_dispatch_alerts(
+  # הרצת מנוע האיתותים ושליחת מיילים
+  alerts, active_subs = check_and_dispatch_alerts(
       st.session_state["stocks_list"],
       rsi_buy,
       rsi_sell,
@@ -399,5 +412,57 @@ else:
           unsafe_allow_html=True,
       )
 
+  # טבלת מניות ראשית
+  st.subheader("📊 רשימת מניות במעקב בזמן אמת")
   df = pd.DataFrame(st.session_state["stocks_list"])
-  st.dataframe(df, use_container_width=True)
+
+  # הוספת עמודת קישור ישיר לטבלה
+  df[f"פתח ב-{st.session_state['trading_platform']}"] = df["סימול"].apply(
+      lambda s: generate_broker_link(s, st.session_state["trading_platform"])
+  )
+
+  st.dataframe(
+      df,
+      column_config={
+          f"פתח ב-{st.session_state['trading_platform']}": st.column_config.LinkColumn(
+              "קישור ישיר", display_text="פתח מניה ↗️"
+          )
+      },
+      use_container_width=True,
+  )
+
+  # יומן התראות אחרונות שנשלחו
+  st.markdown("---")
+  st.subheader("📜 יומן התראות בזמן אמת שנשלחו לאחרונה")
+  logs = load_alerts_log()
+  if logs:
+    st.dataframe(pd.DataFrame(logs), use_container_width=True)
+  else:
+    st.write("טרם נרשמו התראות במערכת.")
+
+  # --- תוספות פאנל מנהל מערכת (Admin Only) ---
+  if st.session_state["role"] == "admin":
+    st.markdown("---")
+    st.markdown(
+        "<h2 style='color: #FF6B00;'>🛠️ פאנל ניהול מתקדם (Admin)</h2>",
+        unsafe_allow_html=True,
+    )
+
+    col_adm1, col_adm2 = st.columns(2)
+
+    with col_adm1:
+      st.subheader("👥 ניהול מנויים ומשתמשים")
+      subs = load_subscribers()
+      if subs:
+        st.dataframe(pd.DataFrame.from_dict(subs, orient="index"))
+      else:
+        st.write("אין מנויים רשומים כרגע.")
+
+    with col_adm2:
+      st.subheader("📊 סטטיסטיקות ותפעול")
+      st.write(f"**סך הכל כניסות ייחודיות:** {current_visitors}")
+
+      if st.button("🔄 איפוס מונה כניסות למערכת"):
+        reset_visitor_count()
+        st.success("מונה הכניסות אופס בהצלחה!")
+        st.rerun()
