@@ -229,8 +229,18 @@ st.markdown(
         background: linear-gradient(0deg, #A7521C 0%, #C8692A 10%, #DF8542 30%, #EFA466 80%);
         background-attachment: fixed;
     }
+    /* כותרת ראשית לבנה מבריקה ובולטת */
     .main-header { 
-        font-size: 2.2rem; color: #ffffff; text-align: center; font-weight: 800; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.4); 
+        font-size: 2.6rem !important; 
+        color: #FFFFFF !important; 
+        text-align: center; 
+        font-weight: 900 !important; 
+        margin-bottom: 1rem; 
+        text-shadow: 
+            0 0 10px rgba(255, 255, 255, 0.8),
+            0 0 20px rgba(255, 255, 255, 0.5),
+            2px 2px 4px rgba(0, 0, 0, 0.8);
+        letter-spacing: 1px;
     }
     .stButton>button, [data-testid="stFormSubmitButton"]>button {
         width: 100% !important; border-radius: 14px !important; font-weight: 950 !important; font-size: 1.3rem !important;
