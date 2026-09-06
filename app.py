@@ -4,6 +4,7 @@ import numpy as np
 import json
 import os
 import requests
+from streamlit_autorefresh import st_autorefresh
 
 # Page configuration
 st.set_page_config(
@@ -445,23 +446,29 @@ else:
     st.markdown("<h1 class='main-header'>📈 StockScreener Pro - לוח בקרה וניתוח טכני</h1>", unsafe_allow_html=True)
     st.success("ברוך הבא למערכת ניתוח המניות! הדוח היומי והתראות בזמן אמת פעילים עבורך.")
 
-    # Real-Time Alert Scanner Bar
-    st.markdown("### 🔔 מנוע סריקת איתותים בזמן אמת")
-    col_a1, col_a2 = st.columns([0.7, 0.3])
-    with col_a1:
-        st.markdown(f"**סף קנייה נוכחי (RSI):** `{rsi_buy}` | **סף מכירה נוכחי (RSI):** `{rsi_sell}`")
-    with col_a2:
-        if st.button("⚡ הרץ סריקת איתותים עכשיו"):
-            alerts, subscribers_list = check_and_dispatch_alerts(st.session_state["stocks_list"], rsi_buy, rsi_sell)
-            if alerts:
-                st.toast(f"🚨 נשלחו {len(alerts)} התראות בזמן אמת ל-{len(subscribers_list)} מנויים!", icon="🔔")
-                for alt in alerts:
-                    if alt["type"] == "BUY":
-                        st.success(f"**איתות קנייה שנשלח:** {alt['message']}")
-                    else:
-                        st.warning(f"**איתות מכירה שנשלח:** {alt['message']}")
+    # ==========================================
+    # 🔔 מנוע סריקת איתותים בזמן אמת (Auto-Refresh)
+    # ==========================================
+    
+    # 1. טיימר רענון אוטומטי של העמוד כל 60 שניות (60,000 מילי-שניות)
+    count = st_autorefresh(interval=60000, limit=1000, key="stock_autorefresh")
+
+    st.markdown("### 🔔 מנוע סריקת איתותים בזמן אמת (פעיל 24/7)")
+    st.markdown(f"**סף קנייה נוכחי (RSI):** `{rsi_buy}` | **סף מכירה נוכחי (RSI):** `{rsi_sell}`")
+
+    # 2. הרצה ישירה של פונקציית הסריקה בכל רענון
+    alerts, subscribers_list = check_and_dispatch_alerts(st.session_state["stocks_list"], rsi_buy, rsi_sell)
+
+    # 3. הצגת התראות על המסך
+    if alerts:
+        st.toast(f"🚨 נלכדו {len(alerts)} איתותים בזמן אמת!", icon="🔔")
+        for alt in alerts:
+            if alt["type"] == "BUY":
+                st.success(f"**איתות קנייה שנלכד:** {alt['message']}")
             else:
-                st.info("לא זוהו איתותים חדשים החורגים מספי ה-RSI שהוגדרו.")
+                st.warning(f"**איתות מכירה שנלכד:** {alt['message']}")
+    else:
+        st.info("לא זוהו איתותים חדשים החורגים מספי ה-RSI שהוגדרו.")
 
     # Table View
     df = pd.DataFrame(st.session_state["stocks_list"])
@@ -485,4 +492,3 @@ else:
         st.dataframe(log_df, use_container_width=True, hide_index=True)
     else:
         st.info("טרם נרשמו התראות בזמן אמת ביומן.")
-from streamlit_autorefresh import st_autorefresh
