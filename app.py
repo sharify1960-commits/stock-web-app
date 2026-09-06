@@ -78,7 +78,7 @@ def generate_broker_link(symbol, platform):
     return f"https://finance.yahoo.com/quote/{symbol_clean}"
 
 
-# --- מנוע איתותים ושליחת מיילים ---
+# --- מנוע איתותים ושליחת מיילים מותאמים אישית ---
 def load_alerts_log():
   if os.path.exists(ALERTS_LOG_FILE):
     try:
@@ -112,10 +112,12 @@ def send_email_notification(recipient, alert_msg, action_link):
     msg["Subject"] = "🚨 איתות בזמן אמת - StockScreener Pro"
 
     body = f"""
-        <div style="direction: rtl; text-align: right; font-family: Arial, sans-serif;">
+        <div style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6;">
             <h2>🚨 איתות חדש זוהה במערכת!</h2>
             <p style="font-size: 1.1rem;">{alert_msg}</p>
-            <p><a href="{action_link}" style="background-color: #FF6B00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold;">⚡ מעבר מיידי לביצוע העסקה</a></p>
+            <p><a href="{action_link}" style="background-color: #FF6B00; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">⚡ מעבר מיידי לביצוע העסקה בברוקר שלך</a></p>
+            <hr>
+            <p style="font-size: 0.8rem; color: #777;">הודעה זו נשלחה באופן אוטומטי מ-StockScreener Pro. המסחר בשוק ההון כרוך בסיכון.</p>
         </div>
         """
     msg.attach(MIMEText(body, "html"))
@@ -130,20 +132,14 @@ def send_email_notification(recipient, alert_msg, action_link):
     return False, str(e)
 
 
-def check_and_dispatch_alerts(
-    stocks_list, rsi_buy_threshold, rsi_sell_threshold, current_platform
-):
+def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold):
   subs = load_subscribers()
-  active_emails = [
-      email for email, info in subs.items() if info.get("active", True)
-  ]
   triggered_alerts = []
 
   for stock in stocks_list:
     symbol = stock["סימול"]
     price = stock["מחיר ($)"]
     rsi = stock["RSI"]
-    broker_link = generate_broker_link(symbol, current_platform)
 
     alert_type = None
     if rsi <= rsi_buy_threshold:
@@ -160,22 +156,29 @@ def check_and_dispatch_alerts(
       )
 
     if alert_type:
+      # שליחה מותאמת אישית לכל מנוע ומנוי
+      for email_to, user_info in subs.items():
+        if user_info.get("active", True):
+          user_broker = user_info.get("platform", "Interactive Brokers")
+          user_link = generate_broker_link(symbol, user_broker)
+
+          send_email_notification(email_to, msg_text, user_link)
+
+      # רישום בלוג
+      default_link = generate_broker_link(symbol, "Interactive Brokers")
       alert_data = {
           "time": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
           "symbol": symbol,
           "type": alert_type,
           "price": price,
           "rsi": rsi,
-          "action_link": broker_link,
+          "action_link": default_link,
           "message": msg_text,
       }
       triggered_alerts.append(alert_data)
       save_alert_log(alert_data)
 
-      for email_to in active_emails:
-        send_email_notification(email_to, msg_text, broker_link)
-
-  return triggered_alerts, active_emails
+  return triggered_alerts
 
 
 # עיצוב ויזואלי (CSS)
@@ -196,6 +199,15 @@ st.markdown(
     }
     .stTextInput input, .stSelectbox select {
         font-weight: 800 !important; font-size: 1rem !important; color: #000000 !important; background-color: #ffffff !important; border: 2px solid #333333 !important; direction: rtl !important; text-align: right !important;
+    }
+    .legal-box {
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        color: #222222;
+        direction: rtl;
+        text-align: right;
     }
 </style>
 """,
@@ -267,21 +279,39 @@ if "stocks_list" not in st.session_state:
       },
   ]
 
-# --- מסך התחברות ---
+# --- מסך התחברות והסברים ---
 if not st.session_state["logged_in"]:
   col_l1, col_l2, col_l3 = st.columns([0.1, 0.8, 0.1])
   with col_l2:
     st.markdown(
-        "<h2 style='text-align: center; color: #ffffff;'>כניסת לקוחות למערכת"
-        " 🔐</h2>",
+        "<h1 style='text-align: center; color: #ffffff; font-weight: 900;'>🚀"
+        " StockScreener Pro - מערכת איתותים בזמן אמת</h1>",
+        unsafe_allow_html=True,
+    )
+
+    # הסבר על המערכת
+    st.markdown(
+        """
+        <div class="legal-box">
+            <h3>ℹ️ על המערכת</h3>
+            <p>מערכת <b>StockScreener Pro</b> הינה סורק מניות מתקדם המבוסס על אלגוריתמים לניתוח טכני (RSI, ממוצעים נעים SMA). המערכת מזהה הזדמנויות מסחר בזמן אמת ושולחת התראות מיידיות לתיבת הדואר האלקטרוני שלך, כולל קישור ישיר לביצוע הפעולה בברוקר המועדף עליך.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # טופס התחברות
+    st.markdown(
+        "<h3 style='text-align: center; color: #ffffff;'>כניסת לקוחות והרשמה"
+        " לפיילוט 🔐</h3>",
         unsafe_allow_html=True,
     )
     with st.form("login_form"):
       username = st.text_input("מספר תעודת זהות / מנהל:")
-      user_email_input = st.text_input("כתובת מייל (חובה):")
+      user_email_input = st.text_input("כתובת מייל (חובה לקבלת איתותים):")
       password = st.text_input("סיסמה:", type="password")
       platform_pref = st.selectbox(
-          "פלטפורמת מסחר מועדפת:",
+          "פלטפורמת מסחר מועדפת (עבור קישורים ישירים):",
           [
               "Interactive Brokers",
               "TradingView",
@@ -300,9 +330,25 @@ if not st.session_state["logged_in"]:
               'מעל 500 ש"ח לשנה',
           ],
       )
+
+      st.markdown("---")
+
+      # הסכם משפטי וזכויות יוצרים
+      st.markdown(
+          """
+            <div style="font-size: 0.85rem; color: #333333; background-color: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                <b>⚖️ הגנה משפטית ותנאי שימוש:</b><br>
+                המערכת מספקת נתונים ואיתותים לימודיים וטכניים בלבד. אין לראות באמור ייעוץ השקעות, המלצה או שידול לקנייה/מכירה של ניירות ערך. המסחר בשוק ההון טומן בחובו סיכון כספי. המשתמש נושא באחריות המלאה בלבד לכל פעולה כספית שיבצע.<br><br>
+                <b>© זכויות יוצרים:</b><br>
+                כל הזכויות שמורות למפתח המערכת. אין להעתיק, לשכפל או להפיץ חלקים מקוד המערכת או התכנים ללא אישור בכתב.
+            </div>
+            """,
+          unsafe_allow_html=True,
+      )
+
       agree = st.checkbox(
-          "אני מאשר/ת שקראתי והבנתי את תנאי השימוש, שהמסחר על אחריותי בלבד, ושכל"
-          " הזכויות שמורות."
+          "אני מאשר/ת שקראתי והבנתי את תנאי השימוש וההגנה המשפטית, שהמסחר על"
+          " אחריותי בלבד, ושכל הזכויות שמורות."
       )
       submit_button = st.form_submit_button("התחבר למערכת")
 
@@ -316,9 +362,9 @@ if not st.session_state["logged_in"]:
           st.session_state["trading_platform"] = platform_pref
           st.rerun()
         elif not agree:
-          st.error("יש לאשר את תנאי השימוש לפני ההתחברות.")
+          st.error("יש לאשר את תנאי השימוש וההגנה המשפטית לפני ההתחברות.")
         elif not user_email_input or "@" not in user_email_input:
-          st.error("נא להזין כתובת מייל תקינה.")
+          st.error("נא להזין כתובת מייל תקינה לקבלת התראות.")
         elif len(password) >= 4:
           st.session_state["logged_in"] = True
           st.session_state["role"] = "user"
@@ -338,7 +384,7 @@ if not st.session_state["logged_in"]:
 else:
   # --- לוח בקרה ראשי (מחובר) ---
 
-  # סרגל צדדי (Sidebar) - משותף לכולם
+  # סרגל צדדי (Sidebar)
   st.sidebar.markdown(
       '<h2 style="color: #FF6B00; font-weight: 900;">🧭 ניווט וניהול</h2>',
       unsafe_allow_html=True,
@@ -348,9 +394,38 @@ else:
     st.sidebar.info("👑 מצב מנהל מערכת (Admin)")
 
   st.sidebar.markdown("---")
-  st.sidebar.subheader("⚙️ סרגלי ניתוח טכני")
-  rsi_buy = st.sidebar.slider("סף קניית יתר (Oversold RSI):", 10, 40, 35)
+  st.sidebar.subheader("⚙️ סרגלי ניתוח טכני ופרמטרים")
+
+  # סליידר והסבר: סף קניית יתר
+  rsi_buy = st.sidebar.slider("סף קנייה יתר (Oversold RSI):", 10, 40, 35)
+  st.sidebar.info(
+      "**הסבר שדה:** מדד RSI נמוך מסף זה מסמן שנכס נסחר במכירת יתר ויכול"
+      " להוות הזדמנות כניסה."
+  )
+
+  # סליידר והסבר: סף מכירת יתר
   rsi_sell = st.sidebar.slider("סף מכירת יתר (Overbought RSI):", 60, 90, 70)
+  st.sidebar.info(
+      "**הסבר שדה:** מדד RSI גבוה מסף זה מצביע על נכס במצב קניית יתר וסיכון"
+      " לתיקון חד."
+  )
+
+  st.sidebar.markdown("---")
+  st.sidebar.subheader("ממוצעים נעים (Moving Averages)")
+
+  # ממוצע נע קצר
+  sma_short = st.sidebar.selectbox(
+      "תקופת ממוצע קצר (SMA Short):", [5, 10, 20, 50], index=2
+  )
+  st.sidebar.info("**הסבר שדה:** משקף את מומנטום המחירים בטווח הקצר.")
+
+  # ממוצע נע ארוך
+  sma_long = st.sidebar.selectbox(
+      "תקופת ממוצע ארוך (SMA Long):", [50, 100, 200], index=2
+  )
+  st.sidebar.info(
+      "**הסבר שדה:** מגדיר את המגמה הראשית של השוק לטווח הארוך."
+  )
 
   st.sidebar.markdown("---")
   st.sidebar.subheader("➕ הוספת מניה חדשה למערכת")
@@ -395,12 +470,9 @@ else:
   # רענון אוטומטי כל דקה
   count = st_autorefresh(interval=60000, limit=1000, key="stock_autorefresh")
 
-  # הרצת מנוע האיתותים ושליחת מיילים
-  alerts, active_subs = check_and_dispatch_alerts(
-      st.session_state["stocks_list"],
-      rsi_buy,
-      rsi_sell,
-      st.session_state["trading_platform"],
+  # הרצת מנוע האיתותים ושליחת מיילים מותאמים
+  alerts = check_and_dispatch_alerts(
+      st.session_state["stocks_list"], rsi_buy, rsi_sell
   )
 
   if alerts:
