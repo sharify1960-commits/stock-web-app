@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import json
 import os
-import requests
+import urllib.parse
 from streamlit_autorefresh import st_autorefresh
 
 # Page configuration
@@ -67,6 +67,21 @@ def increment_counter():
     save_counter(count)
     return count
 
+def generate_broker_link(symbol, platform):
+    """יוצר קישור ישיר (Deep Link) למערכת המסחר הנבחרת של הלקוח"""
+    symbol_clean = symbol.strip().upper()
+    
+    if platform == "TradingView":
+        return f"https://www.tradingview.com/chart/?symbol={symbol_clean}"
+    elif platform == "Interactive Brokers":
+        return f"https://www.interactivebrokers.com/mkt/?ticker={symbol_clean}"
+    elif platform == "Investing.com":
+        return f"https://www.investing.com/search/?q={symbol_clean}"
+    elif platform == "Webull":
+        return f"https://www.webull.com/quote/{symbol_clean.lower()}"
+    else:  # Yahoo Finance כברירת מחדל
+        return f"https://finance.yahoo.com/quote/{symbol_clean}"
+
 # Real-time Alert Engine Functions
 def load_alerts_log():
     if os.path.exists(ALERTS_LOG_FILE):
@@ -83,7 +98,7 @@ def save_alert_log(alert_item):
     with open(ALERTS_LOG_FILE, "w", encoding="utf-8") as f:
         json.dump(logs[:50], f, ensure_ascii=False, indent=4)  # Keep last 50 alerts
 
-def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold):
+def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold, current_platform):
     """
     סורקת את רשימת המניות ומזהה איתותים בזמן אמת לפי הפרמטרים שנקבעו
     """
@@ -95,6 +110,7 @@ def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold
         symbol = stock["סימול"]
         price = stock["מחיר ($)"]
         rsi = stock["RSI"]
+        broker_link = generate_broker_link(symbol, current_platform)
 
         # איתות קנייה
         if rsi <= rsi_buy_threshold:
@@ -104,6 +120,7 @@ def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold
                 "type": "BUY",
                 "price": price,
                 "rsi": rsi,
+                "action_link": broker_link,
                 "message": f"🚨 איתות קנייה בזמן אמת! המניה {symbol} הגיעה ל-RSI של {rsi} (מחיר: ${price})"
             }
             triggered_alerts.append(alert_data)
@@ -117,6 +134,7 @@ def check_and_dispatch_alerts(stocks_list, rsi_buy_threshold, rsi_sell_threshold
                 "type": "SELL",
                 "price": price,
                 "rsi": rsi,
+                "action_link": broker_link,
                 "message": f"⚠️ איתות מכירה/מימוש! המניה {symbol} הגיעה ל-RSI של {rsi} (מחיר: ${price})"
             }
             triggered_alerts.append(alert_data)
@@ -140,7 +158,6 @@ st.markdown("""
         text-shadow: 0 2px 4px rgba(0,0,0,0.4); 
     }
     
-    /* Enhanced button styling */
     .stButton>button, [data-testid="stFormSubmitButton"]>button {
         width: 100% !important; 
         border-radius: 14px !important; 
@@ -158,7 +175,7 @@ st.markdown("""
         color: white !important; 
     }
     
-    .stTextInput input {
+    .stTextInput input, .stSelectbox select {
         font-weight: 800 !important;
         font-size: 1rem !important;
         color: #000000 !important;
@@ -195,7 +212,6 @@ st.markdown("""
         color: #000000; margin-bottom: 10px; direction: rtl; text-align: right;
     }
 
-    /* Mobile Responsive Rules */
     @media (max-width: 768px) {
         .main-header { font-size: 1.6rem !important; }
         [data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; }
@@ -213,6 +229,8 @@ if "role" not in st.session_state:
     st.session_state["role"] = ""
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
+if "trading_platform" not in st.session_state:
+    st.session_state["trading_platform"] = "TradingView"
 if "pilot_counted" not in st.session_state:
     st.session_state["pilot_counted"] = False
 
@@ -247,7 +265,7 @@ if not st.session_state["logged_in"]:
         """, unsafe_allow_html=True)
 
         st.markdown("<h2 style='text-align: center; color: #ffffff; font-size: 1.6rem; font-weight: 900; margin-top: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.4);'>כניסת לקוחות למערכת 🔐</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #ffffff; font-size: 1rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);'>הזן מספר תעודת זהות, כתובת מייל וסיסמה</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #ffffff; font-size: 1rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);'>הזן מספר תעודת זהות, כתובת מייל ופרטי מסחר</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
             st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.1rem; direction: rtl; text-align: right; margin-bottom: 2px;">מספר תעודת זהות / מנהל:</p>', unsafe_allow_html=True)
@@ -258,6 +276,13 @@ if not st.session_state["logged_in"]:
             
             st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.1rem; direction: rtl; text-align: right; margin-bottom: 2px;">סיסמה:</p>', unsafe_allow_html=True)
             password = st.text_input("סיסמה:", type="password", label_visibility="collapsed")
+
+            st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.1rem; direction: rtl; text-align: right; margin-top: 5px; margin-bottom: 2px;">📲 באיזו מערכת / פלטפורמת מסחר אתה משתמש?</p>', unsafe_allow_html=True)
+            platform_pref = st.selectbox(
+                "פלטפורמת מסחר:",
+                ["TradingView", "Interactive Brokers", "Yahoo Finance", "Investing.com", "Webull"],
+                label_visibility="collapsed"
+            )
             
             st.markdown('<p style="color: #ffffff; font-weight: 950; font-size: 1.05rem; direction: rtl; text-align: right; margin-top: 10px; margin-bottom: 2px;">💡 מה המחיר השנתי המרבי שהיית מוכן לשלם על המערכת? (סקר ללא התחייבות):</p>', unsafe_allow_html=True)
             annual_price_pref = st.selectbox(
@@ -284,7 +309,7 @@ if not st.session_state["logged_in"]:
                     </tr>
                     <tr style="line-height: 1.5;">
                         <td style="vertical-align: top; font-weight: 950; padding: 4px 0;">4. שליחה אוטומטית והתראות בזמן אמת:</td>
-                        <td style="vertical-align: top; font-weight: 700; padding: 4px 0;">המייל יצורף לקבלת הדוח היומי (17:30) והתראות בזמן אמת בעת זיהוי איתותי קנייה/מכירה. ניתן לבטל בכל עת.</td>
+                        <td style="vertical-align: top; font-weight: 700; padding: 4px 0;">המייל יצורף לקבלת הדוח היומי (17:30) והתראות בזמן אמת עם קישור מותאם לביצוע/צפייה בפלטפורמה שנבחרה.</td>
                     </tr>
                 </table>
             </div>
@@ -298,6 +323,7 @@ if not st.session_state["logged_in"]:
                     st.session_state["logged_in"] = True
                     st.session_state["role"] = "admin"
                     st.session_state["user_email"] = user_email_input if user_email_input else "admin@admin.com"
+                    st.session_state["trading_platform"] = platform_pref
                     st.rerun()
                 elif not agree:
                     st.error("יש לאשר את תנאי השימוש, ההצהרה והגנת הזכויות לפני ההתחברות.")
@@ -307,11 +333,13 @@ if not st.session_state["logged_in"]:
                     st.session_state["logged_in"] = True
                     st.session_state["role"] = "user"
                     st.session_state["user_email"] = user_email_input
+                    st.session_state["trading_platform"] = platform_pref
                     
                     subs = load_subscribers()
                     subs[user_email_input] = {
                         "active": True, 
                         "id": username,
+                        "platform": platform_pref,
                         "expected_annual_price": annual_price_pref
                     }
                     save_subscribers(subs)
@@ -329,6 +357,7 @@ else:
     st.sidebar.markdown('<h2 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">🧭 ניווט וניהול פרמטרים</h2>', unsafe_allow_html=True)
     st.sidebar.write(f"מחובר כ: **{st.session_state['role']}**")
     st.sidebar.write(f"מייל: **{st.session_state['user_email']}**")
+    st.sidebar.write(f"פלטפורמה נבחרת: **{st.session_state['trading_platform']}**")
     
     subs = load_subscribers()
     current_email = st.session_state["user_email"]
@@ -345,17 +374,17 @@ else:
         st.sidebar.metric(label="👥 סך מנויים פעילים", value=total_subs)
         
         st.sidebar.markdown("---")
-        st.sidebar.markdown('<h3 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">📊 סיכום סקר תמחור</h3>', unsafe_allow_html=True)
+        st.sidebar.markdown('<h3 style="color: #FF6B00; font-weight: 900; direction: rtl; text-align: right;">📊 סיכום סקר תמחור ופלטפורמות</h3>', unsafe_allow_html=True)
         
         prices_list = [data.get("expected_annual_price", "טרם נבחר") for data in subs.values()]
+        platforms_list = [data.get("platform", "TradingView") for data in subs.values()]
         
         if prices_list:
-            price_summary = pd.Series(prices_list).value_counts().reset_index()
-            price_summary.columns = ["טווח מחיר מוצע", "כמות בוחרים"]
-            st.sidebar.dataframe(price_summary, use_container_width=True, hide_index=True)
-        else:
-            st.sidebar.info("טרם התקבלו תשובות לסקר.")
-        
+            st.sidebar.markdown("**התפלגות תמחור:**")
+            st.sidebar.dataframe(pd.Series(prices_list).value_counts().reset_index().rename(columns={"index":"מחיר", 0:"כמות"}), use_container_width=True, hide_index=True)
+            st.sidebar.markdown("**פלטפורמות מסחר פופולריות:**")
+            st.sidebar.dataframe(pd.Series(platforms_list).value_counts().reset_index().rename(columns={"index":"פלטפורמה", 0:"כמות"}), use_container_width=True, hide_index=True)
+
         if st.sidebar.button("🔄 איפוס מונה פיילוט"):
             save_counter(0)
             st.sidebar.success("המונה אופס בהצלחה ל-0!")
@@ -444,41 +473,53 @@ else:
 
     # Main Dashboard View
     st.markdown("<h1 class='main-header'>📈 StockScreener Pro - לוח בקרה וניתוח טכני</h1>", unsafe_allow_html=True)
-    st.success("ברוך הבא למערכת ניתוח המניות! הדוח היומי והתראות בזמן אמת פעילים עבורך.")
+    st.success(f"ברוך הבא! המערכת מחוברת לפלטפורמת **{st.session_state['trading_platform']}** שלך, והתראות איתות יכילו קישור ישיר אליה.")
 
     # ==========================================
-    # 🔔 מנוע סריקת איתותים בזמן אמת (Auto-Refresh)
+    # 🔔 מנוע סריקת איתותים בזמן אמת (Auto-Refresh & Deep Linking)
     # ==========================================
     
-    # 1. טיימר רענון אוטומטי של העמוד כל 60 שניות (60,000 מילי-שניות)
+    # טיימר רענון אוטומטי של העמוד כל 60 שניות
     count = st_autorefresh(interval=60000, limit=1000, key="stock_autorefresh")
 
     st.markdown("### 🔔 מנוע סריקת איתותים בזמן אמת (פעיל 24/7)")
-    st.markdown(f"**סף קנייה נוכחי (RSI):** `{rsi_buy}` | **סף מכירה נוכחי (RSI):** `{rsi_sell}`")
+    st.markdown(f"**סף קנייה נוכחי (RSI):** `{rsi_buy}` | **סף מכירה נוכחי (RSI):** `{rsi_sell}` | **פלטפורמת ביצוע:** `{st.session_state['trading_platform']}`")
 
-    # 2. הרצה ישירה של פונקציית הסריקה בכל רענון
-    alerts, subscribers_list = check_and_dispatch_alerts(st.session_state["stocks_list"], rsi_buy, rsi_sell)
+    # הרצה ישירה של פונקציית הסריקה בכל רענון
+    alerts, subscribers_list = check_and_dispatch_alerts(
+        st.session_state["stocks_list"], 
+        rsi_buy, 
+        rsi_sell, 
+        st.session_state["trading_platform"]
+    )
 
-    # 3. הצגת התראות על המסך
+    # הצגת התראות על המסך כולל כפתור/קישור ישיר לביצוע
     if alerts:
         st.toast(f"🚨 נלכדו {len(alerts)} איתותים בזמן אמת!", icon="🔔")
         for alt in alerts:
+            action_btn_html = f"<a href='{alt['action_link']}' target='_blank' style='background-color: #FF6B00; color: white; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-left: 10px;'>⚡ עשה דיל ב-{st.session_state['trading_platform']}</a>"
+            
             if alt["type"] == "BUY":
-                st.success(f"**איתות קנייה שנלכד:** {alt['message']}")
+                st.markdown(f"🟢 **איתות קנייה:** {alt['message']} {action_btn_html}", unsafe_allow_html=True)
             else:
-                st.warning(f"**איתות מכירה שנלכד:** {alt['message']}")
+                st.markdown(f"🔴 **איתות מכירה:** {alt['message']} {action_btn_html}", unsafe_allow_html=True)
     else:
         st.info("לא זוהו איתותים חדשים החורגים מספי ה-RSI שהוגדרו.")
 
     # Table View
     df = pd.DataFrame(st.session_state["stocks_list"])
-    df["קישור לגרף"] = df["סימול"].apply(lambda s: f"https://finance.yahoo.com/quote/{s}")
+    df[f"קישור ישיר ל-{st.session_state['trading_platform']}"] = df["סימול"].apply(
+        lambda s: generate_broker_link(s, st.session_state['trading_platform'])
+    )
     
     st.dataframe(
         df,
         use_container_width=True,
         column_config={
-            "קישור לגרף": st.column_config.LinkColumn("צפה בגרף חיצוני (Yahoo Finance)", display_text="פתח גרף 📈")
+            f"קישור ישיר ל-{st.session_state['trading_platform']}": st.column_config.LinkColumn(
+                f"פתַח ב-{st.session_state['trading_platform']}", 
+                display_text="פתח מניה 📈"
+            )
         }
     )
 
@@ -488,7 +529,14 @@ else:
     logs = load_alerts_log()
     if logs:
         log_df = pd.DataFrame(logs)
-        log_df.columns = ["זמן שליחה", "סימול", "סוג איתות", "מחיר ($)", "RSI", "הודעה שנשלחה"]
-        st.dataframe(log_df, use_container_width=True, hide_index=True)
+        log_df.columns = ["זמן שליחה", "סימול", "סוג איתות", "מחיר ($)", "RSI", "קישור לפלטפורמה", "הודעה שנשלחה"]
+        st.dataframe(
+            log_df, 
+            use_container_width=True, 
+            hide_index=True,
+            column_config={
+                "קישור לפלטפורמה": st.column_config.LinkColumn("קישור ישיר לביצוע", display_text="מעבר למסחר ⚡")
+            }
+        )
     else:
         st.info("טרם נרשמו התראות בזמן אמת ביומן.")
