@@ -485,3 +485,4 @@ else:
         st.dataframe(log_df, use_container_width=True, hide_index=True)
     else:
         st.info("טרם נרשמו התראות בזמן אמת ביומן.")
+from streamlit_autorefresh import st_autorefresh
