@@ -10,6 +10,67 @@ import pandas as pd
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
+# ==============================================================================
+# 📊 הזרקת Google Analytics (GA4) לתוך Streamlit
+# ------------------------------------------------------------------------------
+# Streamlit לא חושף index.html שאפשר לערוך ישירות, לכן הפונקציה הזו "מטליאה"
+# את קובץ ה-HTML הפנימי של החבילה המותקנת ומזריקה לתוכו את תגית ה-GA.
+# היא בטוחה להרצה חוזרת (idempotent) — אם התג כבר קיים, היא לא תוסיף אותו שוב.
+# הפעולה חייבת לרוץ בכל עליית אפליקציה (Streamlit Cloud בונה את הסביבה מחדש
+# בכל דיפלוי), ולכן היא מופעלת כאן, בתחילת הקובץ, לפני st.set_page_config.
+# ==============================================================================
+GA_MEASUREMENT_ID = "G-C7QJHEZMXL"  # StockScreener Pro — property נפרד ב-GA
+
+
+def inject_google_analytics(measurement_id: str):
+    try:
+        streamlit_static_dir = os.path.join(
+            os.path.dirname(st.__file__), "static"
+        )
+        index_path = os.path.join(streamlit_static_dir, "index.html")
+
+        if not os.path.exists(index_path):
+            return
+
+        with open(index_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+
+        ga_marker = f"<!-- GA_INJECTED_{measurement_id} -->"
+
+        # כבר הוזרק בעבר על אותו קובץ — אין צורך להזריק שוב
+        if ga_marker in html_content:
+            return
+
+        ga_snippet = f"""
+{ga_marker}
+<script async src="https://www.googletagmanager.com/gtag/js?id={measurement_id}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){{dataLayer.push(arguments);}}
+  gtag('js', new Date());
+  gtag('config', '{measurement_id}');
+</script>
+"""
+
+        if "</head>" in html_content:
+            html_content = html_content.replace(
+                "</head>", ga_snippet + "</head>"
+            )
+        else:
+            # ליתר ביטחון — אם </head> לא נמצא, נוסיף בתחילת הקובץ
+            html_content = ga_snippet + html_content
+
+        with open(index_path, "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+    except Exception:
+        # אם ההזרקה נכשלת מכל סיבה (הרשאות קובץ, גרסת Streamlit שונה וכו'),
+        # האפליקציה ממשיכה לרוץ כרגיל בלי GA, ולא קורסת בשביל זה.
+        pass
+
+
+inject_google_analytics(GA_MEASUREMENT_ID)
+
 # הגדרות עמוד - פתיחת ה-Sidebar כברירת מחדל
 st.set_page_config(
     page_title="StockScreener Pro",
